@@ -152,6 +152,17 @@ export default function TaskBlock({ block, onToggleSubtask, onToggleBlock, onUpd
             + add task
           </button>
         )}
+
+        {block.tip && (
+          <div
+            className="mt-3 rounded-lg px-3 py-2"
+            style={{ backgroundColor: block.color + '15' }}
+          >
+            <p className="font-mono text-[9px] text-charcoal leading-snug">
+              <span className="mr-1">🧠</span>{block.tip}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

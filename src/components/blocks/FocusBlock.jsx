@@ -153,6 +153,17 @@ export default function FocusBlock({ block, onToggleSubtask, onToggleBlock, onUp
           </button>
         )}
 
+        {block.tip && (
+          <div
+            className="mt-3 rounded-lg px-3 py-2"
+            style={{ backgroundColor: block.color + '15' }}
+          >
+            <p className="font-mono text-[9px] text-charcoal leading-snug">
+              <span className="mr-1">🧠</span>{block.tip}
+            </p>
+          </div>
+        )}
+
         <p className="font-mono text-[9px] uppercase tracking-widest text-moss mt-3">
           skipped tasks roll, not fail
         </p>
