@@ -99,6 +99,9 @@ export default function FocusBlock({ block, onToggleSubtask, onToggleBlock, onUp
             >
               focus
             </span>
+            {block.note && (
+              <p className="font-sans text-xs text-muted mt-1 leading-snug">{block.note}</p>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
