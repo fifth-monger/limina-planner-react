@@ -5,11 +5,15 @@ const modeStyles = {
   rest: { bg: 'bg-lifebg',         text: 'text-muted' },
 }
 
+const DAY_ABBREVS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const realToday = DAY_ABBREVS[new Date().getDay()]
+
 export default function WeekStrip({ days, activeDay, onDayChange }) {
   return (
     <div className="bg-surface border-b border-lborder px-6 py-3 flex gap-2 overflow-x-auto">
       {days.map((d) => {
         const isActive = d.day === activeDay
+        const isToday = d.day === realToday
         const mode = modeStyles[d.modeType] ?? modeStyles.rest
 
         return (
@@ -23,6 +27,9 @@ export default function WeekStrip({ days, activeDay, onDayChange }) {
             <span className={`font-serif text-lg leading-none ${isActive ? 'text-cerulean' : 'text-charcoal'}`}>
               {d.date}
             </span>
+            {isToday && !isActive && (
+              <span className="w-1 h-1 rounded-full bg-cerulean mb-0.5" />
+            )}
             <span className={`font-mono text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded ${mode.bg} ${mode.text}`}>
               {d.mode}
             </span>

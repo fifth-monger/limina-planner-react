@@ -17,15 +17,41 @@ export const openQuestions = [
   { id: 'oq1', text: 'Japanese: keep or pause? decide by friday.' },
 ]
 
-export const weekDays = [
-  { day: 'Sun', date: 24, mode: 'rest',        modeType: 'rest' },
-  { day: 'Mon', date: 25, mode: 'hem + hunt',  modeType: 'hem' },
-  { day: 'Tue', date: 26, mode: 'hemingway',   modeType: 'hem', isToday: true },
-  { day: 'Wed', date: 27, mode: 'rest / admin',modeType: 'rest' },
-  { day: 'Thu', date: 28, mode: 'hem + limina',modeType: 'hem' },
-  { day: 'Fri', date: 29, mode: 'hem + hunt',  modeType: 'hem' },
-  { day: 'Sat', date: 30, mode: 'rest',        modeType: 'rest' },
+// Static config: the mode/type for each day of the week never changes.
+// Index matches getDay() → 0 = Sunday, 1 = Monday, … 6 = Saturday.
+const DAY_CONFIG = [
+  { day: 'Sun', mode: 'rest',         modeType: 'rest' },
+  { day: 'Mon', mode: 'hem + hunt',   modeType: 'hem'  },
+  { day: 'Tue', mode: 'hemingway',    modeType: 'hem'  },
+  { day: 'Wed', mode: 'rest / admin', modeType: 'rest' },
+  { day: 'Thu', mode: 'hem + limina', modeType: 'hem'  },
+  { day: 'Fri', mode: 'hem + hunt',   modeType: 'hem'  },
+  { day: 'Sat', mode: 'rest',         modeType: 'rest' },
 ]
+
+// Returns the same shape as the old static weekDays array, but with real
+// dates for whichever week contains today. Week always starts on Sunday.
+export function getWeekDays() {
+  const today = new Date()
+  const todayDow = today.getDay() // 0 (Sun) … 6 (Sat)
+
+  // Roll back to the Sunday that starts this week.
+  // e.g. if today is Wednesday (3), we subtract 3 days to reach Sunday.
+  const sunday = new Date(today)
+  sunday.setDate(today.getDate() - todayDow)
+
+  return DAY_CONFIG.map((config, i) => {
+    // Each iteration steps one day forward from Sunday.
+    const d = new Date(sunday)
+    d.setDate(sunday.getDate() + i)
+
+    return {
+      ...config,
+      date: d.getDate(),              // day-of-month number shown in the strip
+      ...(i === todayDow && { isToday: true }),
+    }
+  })
+}
 
 export const dayNotes = {
   Mon: 'Outdoor work ✓  No tidy. Hygiene at 11:05 — laptop closed until done. Hemingway all morning + early afternoon. Hunt at end of day.',

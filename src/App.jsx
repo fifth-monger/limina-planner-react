@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { scheduleByDay, buckets, weeklyRhythm, openQuestions, weekDays, dayNotes, startHereByDay } from './data/initialData'
+import { scheduleByDay, buckets, openQuestions, getWeekDays, dayNotes, startHereByDay } from './data/initialData'
 
 import TopBar from './components/layout/TopBar'
 import WeekStrip from './components/layout/WeekStrip'
@@ -9,11 +9,11 @@ import FocusBlock from './components/blocks/FocusBlock'
 import BufferBlock from './components/blocks/BufferBlock'
 import Sidebar from './components/sidebar/Sidebar'
 import BucketsModal from './components/modals/BucketsModal'
-import RhythmModal from './components/modals/RhythmModal'
 import OpenQuestionsModal from './components/modals/OpenQuestionsModal'
 
-// Find today's day abbreviation (e.g. 'Tue') to use as the default active day
-const todayDay = weekDays.find(d => d.isToday)?.day ?? weekDays[0].day
+// Build the week once at load time — dates are correct for whatever week it is today.
+const weekDays = getWeekDays()
+const todayDay = weekDays.find(d => d.isToday)?.day ?? 'Mon'
 
 const DAY_NAMES = {
   Sun: 'Sunday', Mon: 'Monday', Tue: 'Tuesday',
@@ -23,7 +23,6 @@ const DAY_NAMES = {
 export default function App() {
   const [blocksByDay, setBlocksByDay] = useState(scheduleByDay)
   const [allBuckets, setAllBuckets] = useState(buckets)
-  const [rhythm, setRhythm] = useState(weeklyRhythm)
   const [questions, setQuestions] = useState(openQuestions)
   const [openModal, setOpenModal] = useState(null)
   const [activeDay, setActiveDay] = useState(todayDay)
@@ -286,7 +285,6 @@ export default function App() {
         <Sidebar
           buckets={allBuckets}
           bucketCounts={bucketCounts}
-          rhythm={rhythm}
           questions={questions}
           onOpenModal={setOpenModal}
         />
@@ -297,12 +295,6 @@ export default function App() {
         isOpen={openModal === 'buckets'}
         onClose={() => setOpenModal(null)}
         onSave={setAllBuckets}
-      />
-      <RhythmModal
-        rhythm={rhythm}
-        isOpen={openModal === 'rhythm'}
-        onClose={() => setOpenModal(null)}
-        onSave={setRhythm}
       />
       <OpenQuestionsModal
         questions={questions}
