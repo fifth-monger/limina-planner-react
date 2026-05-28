@@ -2,7 +2,7 @@ import { useState } from 'react'
 import SubTask from './SubTask'
 import TimePicker from './TimePicker'
 
-export default function TaskBlock({ block, onToggleSubtask, onToggleBlock, onUpdateBlock, onAddSubtask, onDeleteBlock }) {
+export default function TaskBlock({ block, getBlockDuration, onToggleSubtask, onToggleBlock, onUpdateBlock, onAddSubtask, onDeleteBlock }) {
   const allDone = block.subtasks.length > 0 && block.subtasks.every(st => st.done)
   const isAnchor = block.isLifeAnchor
 
@@ -66,12 +66,20 @@ export default function TaskBlock({ block, onToggleSubtask, onToggleBlock, onUpd
                   autoFocus
                 />
               ) : (
-                <button
-                  className="font-mono text-[10px] text-muted hover:text-cerulean transition-colors"
-                  onClick={() => startEdit('duration')}
-                >
-                  {block.duration || 'set duration'}
-                </button>
+                <>
+                  <button
+                    className="font-mono text-[10px] text-muted hover:text-cerulean transition-colors"
+                    onClick={() => startEdit('duration')}
+                  >
+                    {getBlockDuration(block) || 'set duration'}
+                  </button>
+                  {/* Show amber "shortened" tag when medium mode shrinks the duration */}
+                  {getBlockDuration(block) !== block.duration && block.duration && (
+                    <span className="font-mono text-[9px] uppercase tracking-widest text-[#C8922A] bg-[#C8922A]/10 px-1.5 py-0.5 rounded">
+                      shortened
+                    </span>
+                  )}
+                </>
               )}
             </div>
 

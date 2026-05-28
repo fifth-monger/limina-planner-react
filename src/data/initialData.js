@@ -6,13 +6,6 @@ export const buckets = [
   { id: 'studio',    name: 'limina.studio', color: '#639922' },
 ]
 
-export const weeklyRhythm =
-`Mon · Tue · Thu · Fri -- hemingway
-Mon · Fri -- + job hunt
-Thu pm -- + limina planner
-Wed -- rest / life admin / free
-Sat · Sun -- yours`
-
 export const openQuestions = [
   { id: 'oq1', text: 'Japanese: keep or pause? decide by friday.' },
 ]
@@ -36,18 +29,15 @@ export function getWeekDays() {
   const todayDow = today.getDay() // 0 (Sun) … 6 (Sat)
 
   // Roll back to the Sunday that starts this week.
-  // e.g. if today is Wednesday (3), we subtract 3 days to reach Sunday.
   const sunday = new Date(today)
   sunday.setDate(today.getDate() - todayDow)
 
   return DAY_CONFIG.map((config, i) => {
-    // Each iteration steps one day forward from Sunday.
     const d = new Date(sunday)
     d.setDate(sunday.getDate() + i)
-
     return {
       ...config,
-      date: d.getDate(),              // day-of-month number shown in the strip
+      date: d.getDate(),
       ...(i === todayDow && { isToday: true }),
     }
   })
@@ -61,6 +51,13 @@ export const dayNotes = {
   Fri: 'Outdoor work ✓  No tidy. Hygiene at 11:05. Hemingway morning, Hunt + wrap afternoon. Laptop closed by 5:25.',
   Sat: 'Paid animals ✓  Meds ✓  Weekly tidy ✓  Hygiene still happens. Everything else is yours.',
   Sun: 'No work. No tidy. No outdoor work. Hygiene still happens — even on rest days.',
+}
+
+// Override day notes by energy mode. null means "use the regular dayNotes".
+export const dayNotesByMode = {
+  productive:   null,
+  medium:       "Lighter load today. One thing done well is better than three done poorly.",
+  bareMinimum:  "Bare minimum day. Anchors only. That's enough.",
 }
 
 export const startHereByDay = {
@@ -77,14 +74,14 @@ export const startHereByDay = {
 // type: 'task'   — daily routine. circle indicators. resets daily.
 // type: 'focus'  — project block tied to a bucket. checkbox indicators. rolls forward.
 // type: 'buffer' — visual separator only. no interaction. shows `label` text.
-// note: subtitle shown below the block name (from HTML schedule's description field)
+// note: subtitle shown below the block name
 // tip:  coaching note at the bottom (🧠 prefix)
+// energyLevel: 'bareMinimum' | 'medium' | 'productive'
+//   bareMinimum → always visible (wake, meds, meals, hygiene, animals, sleep)
+//   medium      → visible at medium + productive (primary focus, breaks, tidy, buffers)
+//   productive  → visible only at productive (extra focus blocks, reading, etc.)
+// mediumDuration: optional string — duration shown when energyMode === 'medium'
 // All times in 24h HH:MM for reliable sort. Buffer times are for ordering only.
-//
-// Colors by category:
-// anchor/meal #BA7517 | meds #7F77DD | animal #1D9E75 | outdoor #0F6E56
-// tidy #7A7870 | hygiene #C27BA0 | trans #C4BAA8 | flex #888780
-// wind #5B4B8A | read #8B5E3C | hem #D85A30 | hunt #378ADD | build #639922
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const scheduleByDay = {
@@ -96,6 +93,7 @@ export const scheduleByDay = {
       name: 'Wake up',
       note: 'Alarm. Outdoor clothes on. Water. Out the door.',
       time: '06:45', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       tip: 'Clothes laid out the night before.',
       subtasks: [
         { id: 'mon-wake-1', text: 'Alarm off — up now, no snooze', done: false },
@@ -109,6 +107,7 @@ export const scheduleByDay = {
       name: 'Neighbor animals (morning)',
       note: '30 min paid care.',
       time: '07:00', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -116,6 +115,7 @@ export const scheduleByDay = {
       name: 'Outdoor work — homestead',
       note: 'Garden, property tasks. Body already warm from animal care.',
       time: '07:30', duration: '~45 min', color: '#0F6E56',
+      energyLevel: 'medium',
       tip: 'Outside first = nervous system regulated before screen work.',
       subtasks: [],
     },
@@ -124,6 +124,7 @@ export const scheduleByDay = {
       name: 'Slow start — free time',
       note: 'Coffee, animals, decompress. Full ramp-up window before breakfast.',
       time: '08:15', duration: '~2 hrs 30 min', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -131,6 +132,7 @@ export const scheduleByDay = {
       name: 'Breakfast',
       note: 'Sit down. Eat actual food. Meds right after.',
       time: '10:45', duration: '~15 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Eat before meds every time.',
       subtasks: [],
     },
@@ -139,6 +141,7 @@ export const scheduleByDay = {
       name: 'Morning meds',
       note: 'With food. Set your 9PM alarm RIGHT NOW.',
       time: '11:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: 'Phone alarm: "MEDS + nook + hygiene" at 9PM. Set it at this step, every day.',
       subtasks: [],
     },
@@ -147,6 +150,7 @@ export const scheduleByDay = {
       name: 'Morning hygiene + get dressed',
       note: 'Laptop stays closed until this is completely done.',
       time: '11:05', duration: '~20 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Do this in order. Don't skip steps. Laptop opens after.",
       subtasks: [
         { id: 'mon-hyg-1', text: 'Shower if needed (has it been 2+ days? be honest)', done: false },
@@ -163,33 +167,37 @@ export const scheduleByDay = {
       name: 'Hemingway — block 1',
       note: 'Client work. Design, dev, content. Whatever is next.',
       time: '11:25', duration: '~2 hrs 5 min', color: '#D85A30',
+      energyLevel: 'medium', mediumDuration: '~1 hr',
       tip: 'Write one goal before opening anything.',
       subtasks: [],
     },
-    { id: 'mon-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29' },
+    { id: 'mon-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29', energyLevel: 'medium' },
     {
       id: 'mon-lunch', type: 'task', isLifeAnchor: true,
       name: 'Lunch',
       note: 'Away from the desk. Sit down. Eat.',
       time: '13:30', duration: '30 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Non-negotiable. Fuel for the afternoon stretch.',
       subtasks: [],
     },
-    { id: 'mon-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00' },
+    { id: 'mon-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00', energyLevel: 'medium' },
     {
       id: 'mon-hem2', type: 'focus', bucketId: 'hemingway',
       name: 'Hemingway — block 2',
       note: 'Return. Keep building.',
       time: '14:05', duration: '~85 min', color: '#D85A30',
+      energyLevel: 'productive',
       tip: 'Blocker? Write it down, keep moving.',
       subtasks: [],
     },
-    { id: 'mon-buf3', type: 'buffer', label: 'screen break, water, move your body', time: '15:29' },
+    { id: 'mon-buf3', type: 'buffer', label: 'screen break, water, move your body', time: '15:29', energyLevel: 'medium' },
     {
       id: 'mon-afbreak', type: 'task', isLifeAnchor: true,
       name: 'Afternoon break',
       note: 'Away from desk. Water, stretch, 5 min outside. Timer on.',
       time: '15:30', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'medium',
       tip: 'Skipping this is what makes 4–5PM feel impossible.',
       subtasks: [],
     },
@@ -198,15 +206,17 @@ export const scheduleByDay = {
       name: 'Job hunt — apps + outreach',
       note: 'Tracker update first, then 1–2 quality apps + outreach.',
       time: '15:45', duration: '~100 min', color: '#378ADD',
+      energyLevel: 'medium', mediumDuration: '~45 min',
       tip: 'Log before you apply.',
       subtasks: [],
     },
-    { id: 'mon-buf4', type: 'buffer', label: 'save work, wrap up', time: '17:25' },
+    { id: 'mon-buf4', type: 'buffer', label: 'save work, wrap up', time: '17:25', energyLevel: 'medium' },
     {
       id: 'mon-ani-home', type: 'task', isLifeAnchor: true,
       name: 'Homestead animal care',
       note: 'Chickens, cats, dogs. Full routine.',
       time: '17:30', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -214,14 +224,16 @@ export const scheduleByDay = {
       name: 'Dinner',
       note: 'Sit down. Real food.',
       time: '18:00', duration: '~45 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
-    { id: 'mon-buf5', type: 'buffer', label: 'free time', time: '18:45' },
+    { id: 'mon-buf5', type: 'buffer', label: 'free time', time: '18:45', energyLevel: 'medium' },
     {
       id: 'mon-ani-pm', type: 'task', isLifeAnchor: true,
       name: 'Neighbor animals (evening)',
       note: '30 min paid care.',
       time: '19:45', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -229,6 +241,7 @@ export const scheduleByDay = {
       name: 'Shower check-in',
       note: 'Have you showered today? Now is the time — before wind-down mode.',
       time: '20:15', duration: '5 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "You don't have to shower every day. But you do have to consciously decide.",
       subtasks: [
         { id: 'mon-shw-1', text: 'Showered already today → skip, see you at 9PM meds', done: false },
@@ -240,6 +253,7 @@ export const scheduleByDay = {
       name: 'Evening meds',
       note: 'Meds. Then straight to bathroom for hygiene. Then nook.',
       time: '21:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: "Alarm fires → meds → hygiene → nook. Don't sit down first.",
       subtasks: [],
     },
@@ -248,6 +262,7 @@ export const scheduleByDay = {
       name: 'Evening hygiene',
       note: "Do this before settling into the nook. Once you're horizontal it won't happen.",
       time: '21:05', duration: '~10 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Meds → bathroom → nook. One motion — don't sit down in between.",
       subtasks: [
         { id: 'mon-evh-1', text: 'Cleanser', done: false },
@@ -261,6 +276,7 @@ export const scheduleByDay = {
       name: 'Nook — screens okay',
       note: 'Phone, crochet, music. No work, no job boards, no email.',
       time: '21:15', duration: '~45 min', color: '#5B4B8A',
+      energyLevel: 'medium',
       tip: 'Low stimulation only. Sleep process has started.',
       subtasks: [],
     },
@@ -269,6 +285,7 @@ export const scheduleByDay = {
       name: 'Screens down — book only',
       note: 'Physical book. Phone face down.',
       time: '22:00', duration: '60 min', color: '#8B5E3C',
+      energyLevel: 'productive',
       tip: 'Highest-leverage sleep window.',
       subtasks: [],
     },
@@ -277,6 +294,7 @@ export const scheduleByDay = {
       name: 'Sleep',
       note: 'Lights out. Book down.',
       time: '23:00', duration: '', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
   ],
@@ -288,6 +306,7 @@ export const scheduleByDay = {
       name: 'Wake up',
       note: 'Alarm. Neighbor animals.',
       time: '06:45', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       tip: 'Clothes laid out the night before.',
       subtasks: [
         { id: 'tue-wake-1', text: 'Alarm off — up now, no snooze', done: false },
@@ -301,6 +320,7 @@ export const scheduleByDay = {
       name: 'Neighbor animals (morning)',
       note: '30 min paid care.',
       time: '07:00', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -308,6 +328,7 @@ export const scheduleByDay = {
       name: 'Slow start — free time',
       note: 'Coffee, animals, land. No work yet.',
       time: '07:30', duration: '~60 min', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -315,6 +336,7 @@ export const scheduleByDay = {
       name: 'Daily tidy',
       note: 'One loop through the space. Timer on — 30 min hard stop.',
       time: '08:30', duration: '30 min', color: '#7A7870',
+      energyLevel: 'medium',
       tip: 'One direction, no backtracking. Done when timer goes off.',
       subtasks: [
         { id: 'tue-tidy-1', text: 'Set 30 min timer', done: false },
@@ -330,6 +352,7 @@ export const scheduleByDay = {
       name: 'Free time continued',
       note: 'No work until hygiene block at 11:05.',
       time: '09:00', duration: '~1 hr 45 min', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -337,6 +360,7 @@ export const scheduleByDay = {
       name: 'Breakfast',
       note: 'Sit down. Eat actual food. Meds right after.',
       time: '10:45', duration: '~15 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Eat before meds every time.',
       subtasks: [],
     },
@@ -345,6 +369,7 @@ export const scheduleByDay = {
       name: 'Morning meds',
       note: 'With food. Set your 9PM alarm RIGHT NOW.',
       time: '11:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: 'Phone alarm: "MEDS + nook + hygiene" at 9PM. Set it at this step, every day.',
       subtasks: [],
     },
@@ -353,6 +378,7 @@ export const scheduleByDay = {
       name: 'Morning hygiene + get dressed',
       note: 'Laptop stays closed until this is completely done.',
       time: '11:05', duration: '~20 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Do this in order. Don't skip steps. Laptop opens after.",
       subtasks: [
         { id: 'tue-hyg-1', text: 'Shower if needed (has it been 2+ days? be honest)', done: false },
@@ -369,32 +395,36 @@ export const scheduleByDay = {
       name: 'Hemingway — block 1',
       note: 'Longest uninterrupted block of the week. Just build.',
       time: '11:25', duration: '~2 hrs 5 min', color: '#D85A30',
+      energyLevel: 'medium', mediumDuration: '~1 hr',
       tip: 'Phone face down. One tab.',
       subtasks: [],
     },
-    { id: 'tue-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29' },
+    { id: 'tue-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29', energyLevel: 'medium' },
     {
       id: 'tue-lunch', type: 'task', isLifeAnchor: true,
       name: 'Lunch',
       note: 'Away from the desk. Sit down. Eat.',
       time: '13:30', duration: '30 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Non-negotiable. Fuel for the afternoon stretch.',
       subtasks: [],
     },
-    { id: 'tue-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00' },
+    { id: 'tue-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00', energyLevel: 'medium' },
     {
       id: 'tue-hem2', type: 'focus', bucketId: 'hemingway',
       name: 'Hemingway — block 2',
       note: 'Return. Review, content, testing.',
       time: '14:05', duration: '~85 min', color: '#D85A30',
+      energyLevel: 'productive',
       subtasks: [],
     },
-    { id: 'tue-buf3', type: 'buffer', label: 'screen break, water, move your body', time: '15:29' },
+    { id: 'tue-buf3', type: 'buffer', label: 'screen break, water, move your body', time: '15:29', energyLevel: 'medium' },
     {
       id: 'tue-afbreak', type: 'task', isLifeAnchor: true,
       name: 'Afternoon break',
       note: 'Away from desk. Water, stretch, 5 min outside. Timer on.',
       time: '15:30', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'medium',
       tip: 'Skipping this is what makes 4–5PM feel impossible.',
       subtasks: [],
     },
@@ -403,15 +433,17 @@ export const scheduleByDay = {
       name: 'Hemingway — block 3',
       note: 'Final push. Polish, QA, wrap.',
       time: '15:45', duration: '~100 min', color: '#D85A30',
+      energyLevel: 'productive',
       tip: "Natural stopping point? Note what's next and close cleanly.",
       subtasks: [],
     },
-    { id: 'tue-buf4', type: 'buffer', label: 'save work, wrap up', time: '17:25' },
+    { id: 'tue-buf4', type: 'buffer', label: 'save work, wrap up', time: '17:25', energyLevel: 'medium' },
     {
       id: 'tue-ani-home', type: 'task', isLifeAnchor: true,
       name: 'Homestead animal care',
       note: 'Chickens, cats, dogs. Full routine.',
       time: '17:30', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -419,14 +451,16 @@ export const scheduleByDay = {
       name: 'Dinner',
       note: 'Sit down. Real food.',
       time: '18:00', duration: '~45 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
-    { id: 'tue-buf5', type: 'buffer', label: 'free time', time: '18:45' },
+    { id: 'tue-buf5', type: 'buffer', label: 'free time', time: '18:45', energyLevel: 'medium' },
     {
       id: 'tue-ani-pm', type: 'task', isLifeAnchor: true,
       name: 'Neighbor animals (evening)',
       note: '30 min paid care.',
       time: '19:45', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -434,6 +468,7 @@ export const scheduleByDay = {
       name: 'Shower check-in',
       note: 'Have you showered today? Now is the time — before wind-down mode.',
       time: '20:15', duration: '5 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "You don't have to shower every day. But you do have to consciously decide.",
       subtasks: [
         { id: 'tue-shw-1', text: 'Showered already today → skip, see you at 9PM meds', done: false },
@@ -445,6 +480,7 @@ export const scheduleByDay = {
       name: 'Evening meds',
       note: 'Meds. Then straight to bathroom for hygiene. Then nook.',
       time: '21:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: "Alarm fires → meds → hygiene → nook. Don't sit down first.",
       subtasks: [],
     },
@@ -453,6 +489,7 @@ export const scheduleByDay = {
       name: 'Evening hygiene',
       note: "Do this before settling into the nook. Once you're horizontal it won't happen.",
       time: '21:05', duration: '~10 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Meds → bathroom → nook. One motion — don't sit down in between.",
       subtasks: [
         { id: 'tue-evh-1', text: 'Cleanser', done: false },
@@ -466,6 +503,7 @@ export const scheduleByDay = {
       name: 'Nook — screens okay',
       note: 'Phone, crochet, music. No work, no job boards, no email.',
       time: '21:15', duration: '~45 min', color: '#5B4B8A',
+      energyLevel: 'medium',
       tip: 'Low stimulation only. Sleep process has started.',
       subtasks: [],
     },
@@ -474,6 +512,7 @@ export const scheduleByDay = {
       name: 'Screens down — book only',
       note: 'Physical book. Phone face down.',
       time: '22:00', duration: '60 min', color: '#8B5E3C',
+      energyLevel: 'productive',
       tip: 'Highest-leverage sleep window.',
       subtasks: [],
     },
@@ -482,6 +521,7 @@ export const scheduleByDay = {
       name: 'Sleep',
       note: 'Lights out. Book down.',
       time: '23:00', duration: '', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
   ],
@@ -493,6 +533,7 @@ export const scheduleByDay = {
       name: 'Wake up',
       note: 'Alarm. Outdoor clothes on. Water. Out the door.',
       time: '06:45', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       tip: 'Clothes laid out the night before.',
       subtasks: [
         { id: 'wed-wake-1', text: 'Alarm off — up now, no snooze', done: false },
@@ -506,6 +547,7 @@ export const scheduleByDay = {
       name: 'Neighbor animals (morning)',
       note: '30 min paid care.',
       time: '07:00', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -513,6 +555,7 @@ export const scheduleByDay = {
       name: 'Outdoor work — homestead',
       note: 'Garden, property tasks. Body already warm from animal care.',
       time: '07:30', duration: '~45 min', color: '#0F6E56',
+      energyLevel: 'medium',
       tip: 'Outside first = nervous system regulated before screen work.',
       subtasks: [],
     },
@@ -521,6 +564,7 @@ export const scheduleByDay = {
       name: 'Slow start — free time',
       note: 'Coffee, animals, decompress. Full ramp-up window before breakfast.',
       time: '08:15', duration: '~2 hrs 30 min', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -528,6 +572,7 @@ export const scheduleByDay = {
       name: 'Breakfast',
       note: 'Sit down. Eat actual food. Meds right after.',
       time: '10:45', duration: '~15 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Eat before meds every time.',
       subtasks: [],
     },
@@ -536,6 +581,7 @@ export const scheduleByDay = {
       name: 'Morning meds',
       note: 'With food. Set your 9PM alarm RIGHT NOW.',
       time: '11:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: 'Phone alarm: "MEDS + nook + hygiene" at 9PM. Set it at this step, every day.',
       subtasks: [],
     },
@@ -544,6 +590,7 @@ export const scheduleByDay = {
       name: 'Morning hygiene + get dressed',
       note: 'Laptop stays closed until this is completely done.',
       time: '11:05', duration: '~20 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Do this in order. Don't skip steps. Laptop opens after.",
       subtasks: [
         { id: 'wed-hyg-1', text: 'Shower if needed (has it been 2+ days? be honest)', done: false },
@@ -560,33 +607,37 @@ export const scheduleByDay = {
       name: 'Life admin / free',
       note: 'Appointments, finances, errands, RV, homestead, creative.',
       time: '11:25', duration: '~2 hrs 5 min', color: '#888780',
+      energyLevel: 'medium',
       tip: 'One word sticky note — decide what today is. Stops the drift.',
       subtasks: [],
     },
-    { id: 'wed-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29' },
+    { id: 'wed-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29', energyLevel: 'medium' },
     {
       id: 'wed-lunch', type: 'task', isLifeAnchor: true,
       name: 'Lunch',
       note: 'Away from the desk. Sit down. Eat.',
       time: '13:30', duration: '30 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Non-negotiable. Fuel for the afternoon stretch.',
       subtasks: [],
     },
-    { id: 'wed-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00' },
+    { id: 'wed-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00', energyLevel: 'medium' },
     {
       id: 'wed-freepm', type: 'task', isLifeAnchor: false,
       name: 'Free afternoon',
       note: 'Rest, garden, Japanese, Inkscape, whatever you want.',
       time: '14:05', duration: '~3 hrs 20 min', color: '#888780',
+      energyLevel: 'medium',
       tip: 'This day is what makes the rest of the week sustainable.',
       subtasks: [],
     },
-    { id: 'wed-buf3', type: 'buffer', label: 'save work, wrap up', time: '17:25' },
+    { id: 'wed-buf3', type: 'buffer', label: 'save work, wrap up', time: '17:25', energyLevel: 'medium' },
     {
       id: 'wed-ani-home', type: 'task', isLifeAnchor: true,
       name: 'Homestead animal care',
       note: 'Chickens, cats, dogs. Full routine.',
       time: '17:30', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -594,14 +645,16 @@ export const scheduleByDay = {
       name: 'Dinner',
       note: 'Sit down. Real food.',
       time: '18:00', duration: '~45 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
-    { id: 'wed-buf4', type: 'buffer', label: 'free time', time: '18:45' },
+    { id: 'wed-buf4', type: 'buffer', label: 'free time', time: '18:45', energyLevel: 'medium' },
     {
       id: 'wed-ani-pm', type: 'task', isLifeAnchor: true,
       name: 'Neighbor animals (evening)',
       note: '30 min paid care.',
       time: '19:45', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -609,6 +662,7 @@ export const scheduleByDay = {
       name: 'Shower check-in',
       note: 'Have you showered today? Now is the time — before wind-down mode.',
       time: '20:15', duration: '5 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "You don't have to shower every day. But you do have to consciously decide.",
       subtasks: [
         { id: 'wed-shw-1', text: 'Showered already today → skip, see you at 9PM meds', done: false },
@@ -620,6 +674,7 @@ export const scheduleByDay = {
       name: 'Evening meds',
       note: 'Meds. Then straight to bathroom for hygiene. Then nook.',
       time: '21:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: "Alarm fires → meds → hygiene → nook. Don't sit down first.",
       subtasks: [],
     },
@@ -628,6 +683,7 @@ export const scheduleByDay = {
       name: 'Evening hygiene',
       note: "Do this before settling into the nook. Once you're horizontal it won't happen.",
       time: '21:05', duration: '~10 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Meds → bathroom → nook. One motion — don't sit down in between.",
       subtasks: [
         { id: 'wed-evh-1', text: 'Cleanser', done: false },
@@ -641,6 +697,7 @@ export const scheduleByDay = {
       name: 'Nook — screens okay',
       note: 'Phone, crochet, music. No work, no job boards, no email.',
       time: '21:15', duration: '~45 min', color: '#5B4B8A',
+      energyLevel: 'medium',
       tip: 'Low stimulation only. Sleep process has started.',
       subtasks: [],
     },
@@ -649,6 +706,7 @@ export const scheduleByDay = {
       name: 'Screens down — book only',
       note: 'Physical book. Phone face down.',
       time: '22:00', duration: '60 min', color: '#8B5E3C',
+      energyLevel: 'productive',
       tip: 'Highest-leverage sleep window.',
       subtasks: [],
     },
@@ -657,6 +715,7 @@ export const scheduleByDay = {
       name: 'Sleep',
       note: 'Lights out. Book down.',
       time: '23:00', duration: '', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
   ],
@@ -668,6 +727,7 @@ export const scheduleByDay = {
       name: 'Wake up',
       note: 'Alarm. Neighbor animals.',
       time: '06:45', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       tip: 'Clothes laid out the night before.',
       subtasks: [
         { id: 'thu-wake-1', text: 'Alarm off — up now, no snooze', done: false },
@@ -681,6 +741,7 @@ export const scheduleByDay = {
       name: 'Neighbor animals (morning)',
       note: '30 min paid care.',
       time: '07:00', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -688,6 +749,7 @@ export const scheduleByDay = {
       name: 'Slow start — free time',
       note: 'Coffee, animals, land. No work yet.',
       time: '07:30', duration: '~60 min', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -695,6 +757,7 @@ export const scheduleByDay = {
       name: 'Daily tidy',
       note: 'One loop through the space. Timer on — 30 min hard stop.',
       time: '08:30', duration: '30 min', color: '#7A7870',
+      energyLevel: 'medium',
       tip: 'One direction, no backtracking. Done when timer goes off.',
       subtasks: [
         { id: 'thu-tidy-1', text: 'Set 30 min timer', done: false },
@@ -710,6 +773,7 @@ export const scheduleByDay = {
       name: 'Free time continued',
       note: 'No work until hygiene block at 11:05.',
       time: '09:00', duration: '~1 hr 45 min', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -717,6 +781,7 @@ export const scheduleByDay = {
       name: 'Breakfast',
       note: 'Sit down. Eat actual food. Meds right after.',
       time: '10:45', duration: '~15 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Eat before meds every time.',
       subtasks: [],
     },
@@ -725,6 +790,7 @@ export const scheduleByDay = {
       name: 'Morning meds',
       note: 'With food. Set your 9PM alarm RIGHT NOW.',
       time: '11:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: 'Phone alarm: "MEDS + nook + hygiene" at 9PM. Set it at this step, every day.',
       subtasks: [],
     },
@@ -733,6 +799,7 @@ export const scheduleByDay = {
       name: 'Morning hygiene + get dressed',
       note: 'Laptop stays closed until this is completely done.',
       time: '11:05', duration: '~20 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Do this in order. Don't skip steps. Laptop opens after.",
       subtasks: [
         { id: 'thu-hyg-1', text: 'Shower if needed (has it been 2+ days? be honest)', done: false },
@@ -749,24 +816,27 @@ export const scheduleByDay = {
       name: 'Hemingway — block 1',
       note: 'Carry forward from Mon/Tue.',
       time: '11:25', duration: '~2 hrs 5 min', color: '#D85A30',
+      energyLevel: 'medium', mediumDuration: '~1 hr',
       tip: 'Write one goal. Then open the file.',
       subtasks: [],
     },
-    { id: 'thu-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29' },
+    { id: 'thu-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29', energyLevel: 'medium' },
     {
       id: 'thu-lunch', type: 'task', isLifeAnchor: true,
       name: 'Lunch',
       note: 'Away from the desk. Sit down. Eat.',
       time: '13:30', duration: '30 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Non-negotiable. Fuel for the afternoon stretch.',
       subtasks: [],
     },
-    { id: 'thu-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00' },
+    { id: 'thu-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00', energyLevel: 'medium' },
     {
       id: 'thu-hem2', type: 'focus', bucketId: 'hemingway',
       name: 'Hemingway — block 2',
       note: 'Shorter block before switching to Limina.',
       time: '14:05', duration: '~45 min', color: '#D85A30',
+      energyLevel: 'productive',
       tip: 'Wrap cleanly at 2:50.',
       subtasks: [],
     },
@@ -775,15 +845,17 @@ export const scheduleByDay = {
       name: 'Limina Planner — block 1',
       note: 'Vite+React+Tailwind. One goal before opening VS Code.',
       time: '14:50', duration: '~40 min', color: '#639922',
+      energyLevel: 'medium', mediumDuration: '~20 min',
       tip: 'One feature. Leave with a concrete win.',
       subtasks: [],
     },
-    { id: 'thu-buf3', type: 'buffer', label: 'screen break, water, move your body', time: '15:29' },
+    { id: 'thu-buf3', type: 'buffer', label: 'screen break, water, move your body', time: '15:29', energyLevel: 'medium' },
     {
       id: 'thu-afbreak', type: 'task', isLifeAnchor: true,
       name: 'Afternoon break',
       note: 'Away from desk. Water, stretch, 5 min outside. Timer on.',
       time: '15:30', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'medium',
       tip: 'Skipping this is what makes 4–5PM feel impossible.',
       subtasks: [],
     },
@@ -792,15 +864,17 @@ export const scheduleByDay = {
       name: 'Limina Planner — block 2',
       note: 'Continue or switch to AI/Kaggle if brain needs lighter work.',
       time: '15:45', duration: '~100 min', color: '#639922',
+      energyLevel: 'productive',
       tip: 'Struggle is the point. Hit a wall? Write what you tried.',
       subtasks: [],
     },
-    { id: 'thu-buf4', type: 'buffer', label: 'save work, wrap up', time: '17:25' },
+    { id: 'thu-buf4', type: 'buffer', label: 'save work, wrap up', time: '17:25', energyLevel: 'medium' },
     {
       id: 'thu-ani-home', type: 'task', isLifeAnchor: true,
       name: 'Homestead animal care',
       note: 'Chickens, cats, dogs. Full routine.',
       time: '17:30', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -808,14 +882,16 @@ export const scheduleByDay = {
       name: 'Dinner',
       note: 'Sit down. Real food.',
       time: '18:00', duration: '~45 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
-    { id: 'thu-buf5', type: 'buffer', label: 'free time', time: '18:45' },
+    { id: 'thu-buf5', type: 'buffer', label: 'free time', time: '18:45', energyLevel: 'medium' },
     {
       id: 'thu-ani-pm', type: 'task', isLifeAnchor: true,
       name: 'Neighbor animals (evening)',
       note: '30 min paid care.',
       time: '19:45', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -823,6 +899,7 @@ export const scheduleByDay = {
       name: 'Shower check-in',
       note: 'Have you showered today? Now is the time — before wind-down mode.',
       time: '20:15', duration: '5 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "You don't have to shower every day. But you do have to consciously decide.",
       subtasks: [
         { id: 'thu-shw-1', text: 'Showered already today → skip, see you at 9PM meds', done: false },
@@ -834,6 +911,7 @@ export const scheduleByDay = {
       name: 'Evening meds',
       note: 'Meds. Then straight to bathroom for hygiene. Then nook.',
       time: '21:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: "Alarm fires → meds → hygiene → nook. Don't sit down first.",
       subtasks: [],
     },
@@ -842,6 +920,7 @@ export const scheduleByDay = {
       name: 'Evening hygiene',
       note: "Do this before settling into the nook. Once you're horizontal it won't happen.",
       time: '21:05', duration: '~10 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Meds → bathroom → nook. One motion — don't sit down in between.",
       subtasks: [
         { id: 'thu-evh-1', text: 'Cleanser', done: false },
@@ -855,6 +934,7 @@ export const scheduleByDay = {
       name: 'Nook — screens okay',
       note: 'Phone, crochet, music. No work, no job boards, no email.',
       time: '21:15', duration: '~45 min', color: '#5B4B8A',
+      energyLevel: 'medium',
       tip: 'Low stimulation only. Sleep process has started.',
       subtasks: [],
     },
@@ -863,6 +943,7 @@ export const scheduleByDay = {
       name: 'Screens down — book only',
       note: 'Physical book. Phone face down.',
       time: '22:00', duration: '60 min', color: '#8B5E3C',
+      energyLevel: 'productive',
       tip: 'Highest-leverage sleep window.',
       subtasks: [],
     },
@@ -871,6 +952,7 @@ export const scheduleByDay = {
       name: 'Sleep',
       note: 'Lights out. Book down.',
       time: '23:00', duration: '', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
   ],
@@ -882,6 +964,7 @@ export const scheduleByDay = {
       name: 'Wake up',
       note: 'Alarm. Outdoor clothes on. Water. Out the door.',
       time: '06:45', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       tip: 'Clothes laid out the night before.',
       subtasks: [
         { id: 'fri-wake-1', text: 'Alarm off — up now, no snooze', done: false },
@@ -895,6 +978,7 @@ export const scheduleByDay = {
       name: 'Neighbor animals (morning)',
       note: '30 min paid care.',
       time: '07:00', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -902,6 +986,7 @@ export const scheduleByDay = {
       name: 'Outdoor work — homestead',
       note: 'Garden, property tasks. Body already warm from animal care.',
       time: '07:30', duration: '~45 min', color: '#0F6E56',
+      energyLevel: 'medium',
       tip: 'Outside first = nervous system regulated before screen work.',
       subtasks: [],
     },
@@ -910,6 +995,7 @@ export const scheduleByDay = {
       name: 'Slow start — free time',
       note: 'Coffee, animals, decompress. Full ramp-up window before breakfast.',
       time: '08:15', duration: '~2 hrs 30 min', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -917,6 +1003,7 @@ export const scheduleByDay = {
       name: 'Breakfast',
       note: 'Sit down. Eat actual food. Meds right after.',
       time: '10:45', duration: '~15 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Eat before meds every time.',
       subtasks: [],
     },
@@ -925,6 +1012,7 @@ export const scheduleByDay = {
       name: 'Morning meds',
       note: 'With food. Set your 9PM alarm RIGHT NOW.',
       time: '11:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: 'Phone alarm: "MEDS + nook + hygiene" at 9PM. Set it at this step, every day.',
       subtasks: [],
     },
@@ -933,6 +1021,7 @@ export const scheduleByDay = {
       name: 'Morning hygiene + get dressed',
       note: 'Laptop stays closed until this is completely done.',
       time: '11:05', duration: '~20 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Do this in order. Don't skip steps. Laptop opens after.",
       subtasks: [
         { id: 'fri-hyg-1', text: 'Shower if needed (has it been 2+ days? be honest)', done: false },
@@ -949,24 +1038,27 @@ export const scheduleByDay = {
       name: 'Hemingway — block 1',
       note: 'Friday morning is protected Hemingway time.',
       time: '11:25', duration: '~2 hrs 5 min', color: '#D85A30',
+      energyLevel: 'medium', mediumDuration: '~1 hr',
       tip: 'Write one goal. Build.',
       subtasks: [],
     },
-    { id: 'fri-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29' },
+    { id: 'fri-buf1', type: 'buffer', label: 'save work, step away from desk', time: '13:29', energyLevel: 'medium' },
     {
       id: 'fri-lunch', type: 'task', isLifeAnchor: true,
       name: 'Lunch',
       note: 'Away from the desk. Sit down. Eat.',
       time: '13:30', duration: '30 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       tip: 'Non-negotiable. Fuel for the afternoon stretch.',
       subtasks: [],
     },
-    { id: 'fri-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00' },
+    { id: 'fri-buf2', type: 'buffer', label: '5 min settle, then back to work', time: '14:00', energyLevel: 'medium' },
     {
       id: 'fri-hunt1', type: 'focus', bucketId: 'jobs',
       name: 'Job hunt — weekly tracker review',
       note: 'Audit: silent 7+ days, follow-ups, archive.',
       time: '14:05', duration: '~45 min', color: '#378ADD',
+      energyLevel: 'medium', mediumDuration: '~20 min',
       tip: 'Maintenance only — nothing slips through the week.',
       subtasks: [],
     },
@@ -975,15 +1067,17 @@ export const scheduleByDay = {
       name: 'Apply + outreach',
       note: '1–2 apps. Cold outreach.',
       time: '14:50', duration: '~40 min', color: '#378ADD',
+      energyLevel: 'productive',
       tip: 'Quality over quantity.',
       subtasks: [],
     },
-    { id: 'fri-buf3', type: 'buffer', label: 'screen break, water, move your body', time: '15:29' },
+    { id: 'fri-buf3', type: 'buffer', label: 'screen break, water, move your body', time: '15:29', energyLevel: 'medium' },
     {
       id: 'fri-afbreak', type: 'task', isLifeAnchor: true,
       name: 'Afternoon break',
       note: 'Away from desk. Water, stretch, 5 min outside. Timer on.',
       time: '15:30', duration: '15 min', color: '#C4BAA8',
+      energyLevel: 'medium',
       tip: 'Skipping this is what makes 4–5PM feel impossible.',
       subtasks: [],
     },
@@ -992,6 +1086,7 @@ export const scheduleByDay = {
       name: 'Hemingway — block 2',
       note: 'Wrap loose ends or push forward.',
       time: '15:45', duration: '~60 min', color: '#D85A30',
+      energyLevel: 'productive',
       tip: 'Note where you left off — Monday needs a clear on-ramp.',
       subtasks: [],
     },
@@ -1000,6 +1095,7 @@ export const scheduleByDay = {
       name: 'Week wrap-up',
       note: '3 wins + 1 carry forward. 10 min max.',
       time: '16:45', duration: '15 min', color: '#888780',
+      energyLevel: 'medium',
       tip: 'Write the wins physically.',
       subtasks: [],
     },
@@ -1008,14 +1104,16 @@ export const scheduleByDay = {
       name: 'Buffer / early close',
       note: "Done? Close it. In flow? 25 min max.",
       time: '17:00', duration: 'up to 25 min', color: '#888780',
+      energyLevel: 'productive',
       subtasks: [],
     },
-    { id: 'fri-buf4', type: 'buffer', label: 'save work, wrap up', time: '17:25' },
+    { id: 'fri-buf4', type: 'buffer', label: 'save work, wrap up', time: '17:25', energyLevel: 'medium' },
     {
       id: 'fri-ani-home', type: 'task', isLifeAnchor: true,
       name: 'Homestead animal care',
       note: 'Chickens, cats, dogs. Full routine.',
       time: '17:30', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1023,14 +1121,16 @@ export const scheduleByDay = {
       name: 'Dinner',
       note: 'Sit down. Real food.',
       time: '18:00', duration: '~45 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
-    { id: 'fri-buf5', type: 'buffer', label: 'free time', time: '18:45' },
+    { id: 'fri-buf5', type: 'buffer', label: 'free time', time: '18:45', energyLevel: 'medium' },
     {
       id: 'fri-ani-pm', type: 'task', isLifeAnchor: true,
       name: 'Neighbor animals (evening)',
       note: '30 min paid care.',
       time: '19:45', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1038,6 +1138,7 @@ export const scheduleByDay = {
       name: 'Shower check-in',
       note: 'Have you showered today? Now is the time — before wind-down mode.',
       time: '20:15', duration: '5 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "You don't have to shower every day. But you do have to consciously decide.",
       subtasks: [
         { id: 'fri-shw-1', text: 'Showered already today → skip, see you at 9PM meds', done: false },
@@ -1049,6 +1150,7 @@ export const scheduleByDay = {
       name: 'Evening meds',
       note: 'Meds. Then straight to bathroom for hygiene. Then nook.',
       time: '21:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: "Alarm fires → meds → hygiene → nook. Don't sit down first.",
       subtasks: [],
     },
@@ -1057,6 +1159,7 @@ export const scheduleByDay = {
       name: 'Evening hygiene',
       note: "Do this before settling into the nook. Once you're horizontal it won't happen.",
       time: '21:05', duration: '~10 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Meds → bathroom → nook. One motion — don't sit down in between.",
       subtasks: [
         { id: 'fri-evh-1', text: 'Cleanser', done: false },
@@ -1070,6 +1173,7 @@ export const scheduleByDay = {
       name: 'Nook — screens okay',
       note: 'Phone, crochet, music. No work, no job boards, no email.',
       time: '21:15', duration: '~45 min', color: '#5B4B8A',
+      energyLevel: 'medium',
       tip: 'Low stimulation only. Sleep process has started.',
       subtasks: [],
     },
@@ -1078,6 +1182,7 @@ export const scheduleByDay = {
       name: 'Screens down — book only',
       note: 'Physical book. Phone face down.',
       time: '22:00', duration: '60 min', color: '#8B5E3C',
+      energyLevel: 'productive',
       tip: 'Highest-leverage sleep window.',
       subtasks: [],
     },
@@ -1086,6 +1191,7 @@ export const scheduleByDay = {
       name: 'Sleep',
       note: 'Lights out. Book down.',
       time: '23:00', duration: '', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
   ],
@@ -1097,6 +1203,7 @@ export const scheduleByDay = {
       name: 'Neighbor animals (morning)',
       note: '30 min paid care.',
       time: '07:00', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1104,6 +1211,7 @@ export const scheduleByDay = {
       name: 'No pressure morning',
       note: 'Sleep, coffee, property walk.',
       time: '07:30', duration: '~2 hrs', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -1111,6 +1219,7 @@ export const scheduleByDay = {
       name: 'Weekly tidy',
       note: 'Deeper reset. Timer — 30 min.',
       time: '09:30', duration: '30 min', color: '#7A7870',
+      energyLevel: 'medium',
       tip: 'One direction, no backtracking.',
       subtasks: [
         { id: 'sat-tidy-1', text: 'Set 30 min timer', done: false },
@@ -1127,6 +1236,7 @@ export const scheduleByDay = {
       name: 'Free morning',
       note: 'Whatever you want.',
       time: '10:00', duration: '~45 min', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -1134,6 +1244,7 @@ export const scheduleByDay = {
       name: 'Breakfast / brunch',
       note: 'Eat.',
       time: '10:45', duration: '~20 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1141,6 +1252,7 @@ export const scheduleByDay = {
       name: 'Morning meds',
       note: 'With food. Set 9PM alarm.',
       time: '11:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1148,6 +1260,7 @@ export const scheduleByDay = {
       name: 'Morning hygiene + get dressed',
       note: 'Laptop stays closed until this is completely done.',
       time: '11:05', duration: '~20 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Do this in order. Don't skip steps. Laptop opens after.",
       subtasks: [
         { id: 'sat-hyg-1', text: 'Shower if needed (has it been 2+ days? be honest)', done: false },
@@ -1164,6 +1277,7 @@ export const scheduleByDay = {
       name: 'Creative / free afternoon',
       note: 'Crochet, jewelry, music, anime, Japanese, Mezcal Archive, garden.',
       time: '11:25', duration: '~4 hrs', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -1171,6 +1285,7 @@ export const scheduleByDay = {
       name: 'Homestead animal care',
       note: 'Chickens, cats, dogs. Full routine.',
       time: '17:30', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1178,14 +1293,16 @@ export const scheduleByDay = {
       name: 'Dinner',
       note: 'Sit down. Real food.',
       time: '18:00', duration: '~45 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
-    { id: 'sat-buf1', type: 'buffer', label: 'free time', time: '18:45' },
+    { id: 'sat-buf1', type: 'buffer', label: 'free time', time: '18:45', energyLevel: 'medium' },
     {
       id: 'sat-ani-pm', type: 'task', isLifeAnchor: true,
       name: 'Neighbor animals (evening)',
       note: '30 min paid care.',
       time: '19:45', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1193,6 +1310,7 @@ export const scheduleByDay = {
       name: 'Shower check-in',
       note: 'Have you showered today? Now is the time — before wind-down mode.',
       time: '20:15', duration: '5 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "You don't have to shower every day. But you do have to consciously decide.",
       subtasks: [
         { id: 'sat-shw-1', text: 'Showered already today → skip, see you at 9PM meds', done: false },
@@ -1204,6 +1322,7 @@ export const scheduleByDay = {
       name: 'Evening meds',
       note: 'Meds. Then straight to bathroom for hygiene. Then nook.',
       time: '21:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: "Alarm fires → meds → hygiene → nook. Don't sit down first.",
       subtasks: [],
     },
@@ -1212,6 +1331,7 @@ export const scheduleByDay = {
       name: 'Evening hygiene',
       note: "Do this before settling into the nook. Once you're horizontal it won't happen.",
       time: '21:05', duration: '~10 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Meds → bathroom → nook. One motion — don't sit down in between.",
       subtasks: [
         { id: 'sat-evh-1', text: 'Cleanser', done: false },
@@ -1225,6 +1345,7 @@ export const scheduleByDay = {
       name: 'Nook — screens okay',
       note: 'Phone, crochet, music. No work, no job boards, no email.',
       time: '21:15', duration: '~45 min', color: '#5B4B8A',
+      energyLevel: 'medium',
       tip: 'Low stimulation only. Sleep process has started.',
       subtasks: [],
     },
@@ -1233,6 +1354,7 @@ export const scheduleByDay = {
       name: 'Screens down — book only',
       note: 'Physical book. Phone face down.',
       time: '22:00', duration: '60 min', color: '#8B5E3C',
+      energyLevel: 'productive',
       tip: 'Highest-leverage sleep window.',
       subtasks: [],
     },
@@ -1241,6 +1363,7 @@ export const scheduleByDay = {
       name: 'Sleep',
       note: 'Lights out. Book down.',
       time: '23:00', duration: '', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
   ],
@@ -1252,6 +1375,7 @@ export const scheduleByDay = {
       name: 'Neighbor animals (morning)',
       note: '30 min paid care.',
       time: '07:00', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1259,6 +1383,7 @@ export const scheduleByDay = {
       name: 'Full rest morning',
       note: 'Sleep in, garden, spiritual practice.',
       time: '07:30', duration: 'open', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -1266,6 +1391,7 @@ export const scheduleByDay = {
       name: 'Breakfast / brunch',
       note: 'Eat.',
       time: '10:45', duration: '~20 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1273,6 +1399,7 @@ export const scheduleByDay = {
       name: 'Morning meds',
       note: 'With food. Set 9PM alarm.',
       time: '11:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1280,6 +1407,7 @@ export const scheduleByDay = {
       name: 'Morning hygiene + get dressed',
       note: 'Laptop stays closed until this is completely done.',
       time: '11:05', duration: '~20 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Do this in order. Don't skip steps. Laptop opens after.",
       subtasks: [
         { id: 'sun-hyg-1', text: 'Shower if needed (has it been 2+ days? be honest)', done: false },
@@ -1296,6 +1424,7 @@ export const scheduleByDay = {
       name: 'Rest afternoon',
       note: 'Property, animals, cooking, reading. No work screens.',
       time: '11:25', duration: '~4 hrs', color: '#888780',
+      energyLevel: 'medium',
       subtasks: [],
     },
     {
@@ -1303,6 +1432,7 @@ export const scheduleByDay = {
       name: 'Homestead animal care',
       note: 'Chickens, cats, dogs. Full routine.',
       time: '17:30', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1310,14 +1440,16 @@ export const scheduleByDay = {
       name: 'Dinner',
       note: 'Sit down. Real food.',
       time: '18:00', duration: '~45 min', color: '#BA7517',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
-    { id: 'sun-buf1', type: 'buffer', label: 'free time', time: '18:45' },
+    { id: 'sun-buf1', type: 'buffer', label: 'free time', time: '18:45', energyLevel: 'medium' },
     {
       id: 'sun-ani-pm', type: 'task', isLifeAnchor: true,
       name: 'Neighbor animals (evening)',
       note: '30 min paid care.',
       time: '19:45', duration: '30 min', color: '#1D9E75',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
     {
@@ -1325,6 +1457,7 @@ export const scheduleByDay = {
       name: 'Shower check-in',
       note: 'Have you showered today? Now is the time — before wind-down mode.',
       time: '20:15', duration: '5 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "You don't have to shower every day. But you do have to consciously decide.",
       subtasks: [
         { id: 'sun-shw-1', text: 'Showered already today → skip, see you at 9PM meds', done: false },
@@ -1336,6 +1469,7 @@ export const scheduleByDay = {
       name: 'Evening meds',
       note: 'Meds. Then straight to bathroom for hygiene. Then nook.',
       time: '21:00', duration: '5 min', color: '#7F77DD',
+      energyLevel: 'bareMinimum',
       tip: "Alarm fires → meds → hygiene → nook. Don't sit down first.",
       subtasks: [],
     },
@@ -1344,6 +1478,7 @@ export const scheduleByDay = {
       name: 'Evening hygiene',
       note: "Do this before settling into the nook. Once you're horizontal it won't happen.",
       time: '21:05', duration: '~10 min', color: '#C27BA0',
+      energyLevel: 'bareMinimum',
       tip: "Meds → bathroom → nook. One motion — don't sit down in between.",
       subtasks: [
         { id: 'sun-evh-1', text: 'Cleanser', done: false },
@@ -1357,6 +1492,7 @@ export const scheduleByDay = {
       name: 'Nook — screens okay',
       note: 'Phone, crochet, music. No work, no job boards, no email.',
       time: '21:15', duration: '~45 min', color: '#5B4B8A',
+      energyLevel: 'medium',
       tip: 'Low stimulation only. Sleep process has started.',
       subtasks: [],
     },
@@ -1365,6 +1501,7 @@ export const scheduleByDay = {
       name: 'Screens down — book only',
       note: 'Physical book. Phone face down.',
       time: '22:00', duration: '60 min', color: '#8B5E3C',
+      energyLevel: 'productive',
       tip: 'Highest-leverage sleep window.',
       subtasks: [],
     },
@@ -1373,6 +1510,7 @@ export const scheduleByDay = {
       name: 'Sleep',
       note: 'Lights out. Book down.',
       time: '23:00', duration: '', color: '#C4BAA8',
+      energyLevel: 'bareMinimum',
       subtasks: [],
     },
   ],

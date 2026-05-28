@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { scheduleByDay, buckets, openQuestions, getWeekDays, dayNotes, startHereByDay } from './data/initialData'
+import { useState, useEffect } from 'react'
+import { scheduleByDay, buckets, openQuestions, getWeekDays, dayNotes, dayNotesByMode, startHereByDay } from './data/initialData'
 
 import TopBar from './components/layout/TopBar'
 import WeekStrip from './components/layout/WeekStrip'
@@ -10,6 +10,7 @@ import BufferBlock from './components/blocks/BufferBlock'
 import Sidebar from './components/sidebar/Sidebar'
 import BucketsModal from './components/modals/BucketsModal'
 import OpenQuestionsModal from './components/modals/OpenQuestionsModal'
+import EnergyCheckInModal from './components/modals/EnergyCheckInModal'
 
 // Build the week once at load time — dates are correct for whatever week it is today.
 const weekDays = getWeekDays()
@@ -26,13 +27,64 @@ export default function App() {
   const [questions, setQuestions] = useState(openQuestions)
   const [openModal, setOpenModal] = useState(null)
   const [activeDay, setActiveDay] = useState(todayDay)
+  const [energyMode, setEnergyMode] = useState('productive')
+  const [showCheckIn, setShowCheckIn] = useState(false)
 
   // 'type' → choosing task vs focus | 'focus-bucket' → picking a bucket
   const [addingStep, setAddingStep] = useState(null)
   const [selectedBucketId, setSelectedBucketId] = useState('')
 
+  // On mount: check if the user already checked in today.
+  // localStorage stores plain strings — 'limina-checkin-date' is something like "Wed May 27 2026".
+  // If it matches today, we restore their saved mode and skip the modal.
+  // If it's a new day (or first launch), we show the check-in modal.
+  useEffect(() => {
+    const savedMode = localStorage.getItem('limina-energy-mode')
+    const savedDate = localStorage.getItem('limina-checkin-date')
+    const today = new Date().toDateString()
+
+    if (savedDate === today && savedMode) {
+      setEnergyMode(savedMode)
+    } else {
+      setShowCheckIn(true)
+    }
+  }, []) // empty array = run once, on first render only
+
+  function handleCheckInSelect(mode) {
+    setEnergyMode(mode)
+    setShowCheckIn(false)
+    localStorage.setItem('limina-energy-mode', mode)
+    localStorage.setItem('limina-checkin-date', new Date().toDateString())
+  }
+
+  function handleModeChange(mode) {
+    setEnergyMode(mode)
+    localStorage.setItem('limina-energy-mode', mode)
+    // Update the date too so a mid-day change doesn't re-trigger the modal tomorrow
+    localStorage.setItem('limina-checkin-date', new Date().toDateString())
+  }
+
   // Blocks for the currently visible day
   const blocks = blocksByDay[activeDay] ?? []
+
+  // Derived value: which blocks to show based on energy mode.
+  // This is NOT stored in useState — it's recalculated every render from blocks + energyMode.
+  // That way blocks and energyMode are always the source of truth; visibleBlocks can never get out of sync.
+  const visibleBlocks = blocks.filter(block => {
+    if (energyMode === 'productive') return true                              // show everything
+    if (energyMode === 'medium') return block.energyLevel !== 'productive'   // hide productive-only
+    if (energyMode === 'bareMinimum') return block.energyLevel === 'bareMinimum' // anchors only
+    return true
+  })
+
+  // Returns the duration string to display for a block.
+  // If medium mode AND the block has a shorter mediumDuration, return that instead.
+  function getBlockDuration(block) {
+    if (energyMode === 'medium' && block.mediumDuration) {
+      return block.mediumDuration
+    }
+    return block.duration
+  }
 
   // Helper to update blocks for just the active day
   function setBlocks(updater) {
@@ -45,7 +97,10 @@ export default function App() {
   // Current day info for the header
   const activeDayInfo = weekDays.find(d => d.day === activeDay)
   const startHere = startHereByDay[activeDay] ?? ''
-  const dayNote = dayNotes[activeDay] ?? ''
+
+  // Energy-mode note overrides the day-specific note when the mode needs a message.
+  // productive mode returns null from dayNotesByMode, so we fall through to the day note.
+  const dayNote = dayNotesByMode[energyMode] ?? dayNotes[activeDay] ?? ''
 
   // Count subtasks per bucket across all focus blocks for the active day
   const bucketCounts = allBuckets.reduce((acc, b) => {
@@ -116,6 +171,7 @@ export default function App() {
       duration: '',
       color: '#B09070',
       subtasks: [],
+      energyLevel: 'medium',
     }])
     setAddingStep(null)
   }
@@ -133,6 +189,7 @@ export default function App() {
       duration: '',
       color: bucket.color,
       subtasks: [],
+      energyLevel: 'productive',
     }])
     setAddingStep(null)
     setSelectedBucketId('')
@@ -145,7 +202,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-parchment flex flex-col">
-      <TopBar />
+      <TopBar energyMode={energyMode} onModeChange={handleModeChange} />
       <WeekStrip days={weekDays} activeDay={activeDay} onDayChange={setActiveDay} />
 
       <div className="flex flex-1 overflow-hidden">
@@ -167,7 +224,7 @@ export default function App() {
             <DayNote note={dayNote} />
 
             <div className="flex flex-col gap-3">
-              {blocks.map(block => {
+              {visibleBlocks.map(block => {
                 if (block.type === 'buffer') {
                   return <BufferBlock key={block.id} block={block} />
                 }
@@ -176,6 +233,7 @@ export default function App() {
                     <FocusBlock
                       key={block.id}
                       block={block}
+                      getBlockDuration={getBlockDuration}
                       onToggleSubtask={handleToggleSubtask}
                       onToggleBlock={handleToggleBlock}
                       onUpdateBlock={handleUpdateBlock}
@@ -188,6 +246,7 @@ export default function App() {
                   <TaskBlock
                     key={block.id}
                     block={block}
+                    getBlockDuration={getBlockDuration}
                     onToggleSubtask={handleToggleSubtask}
                     onToggleBlock={handleToggleBlock}
                     onUpdateBlock={handleUpdateBlock}
@@ -301,6 +360,10 @@ export default function App() {
         isOpen={openModal === 'questions'}
         onClose={() => setOpenModal(null)}
         onSave={setQuestions}
+      />
+      <EnergyCheckInModal
+        isOpen={showCheckIn}
+        onSelect={handleCheckInSelect}
       />
     </div>
   )
