@@ -88,7 +88,7 @@ export default function AlarmsModal({ alarms, isOpen, onClose, onAdd, onUpdate, 
 
         {/* List */}
         <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-2">
-          {alarms.map(alarm => (
+          {[...alarms].sort((a, b) => a.time.localeCompare(b.time)).map(alarm => (
             <div key={alarm.id} className="rounded-xl border border-lborder overflow-hidden">
               {/* Collapsed row */}
               {editingId !== alarm.id ? (
