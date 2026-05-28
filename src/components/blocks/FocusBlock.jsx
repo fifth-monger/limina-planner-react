@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import SubTask from './SubTask'
-import TimePicker from './TimePicker'
+import TimePicker, { formatTimeDisplay } from './TimePicker'
 
-export default function FocusBlock({ block, getBlockDuration, bucketBacklog = [], onToggleSubtask, onToggleBlock, onUpdateBlock, onAddSubtask, onDeleteBlock, onPullFromBacklog }) {
+export default function FocusBlock({ block, getBlockDuration, bucketBacklog = [], inBlockAlarms = [], onToggleSubtask, onToggleBlock, onUpdateBlock, onAddSubtask, onDeleteBlock, onPullFromBacklog }) {
   const allDone = block.subtasks.length > 0 && block.subtasks.every(st => st.done)
 
   const [editingField, setEditingField] = useState(null)
@@ -210,6 +210,26 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* In-block alarms — shown when an alarm fires during this block's window */}
+        {inBlockAlarms.length > 0 && (
+          <div className="mt-3 flex flex-col gap-1">
+            {inBlockAlarms.map(alarm => (
+              <div
+                key={alarm.id}
+                className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border border-dashed border-lborder"
+              >
+                <span className="text-[10px] flex-shrink-0">🔔</span>
+                <span className="font-mono text-[9px] text-muted flex-shrink-0">
+                  {formatTimeDisplay(alarm.time)}
+                </span>
+                <span className="font-mono text-[9px] text-charcoal italic truncate">
+                  {alarm.label}
+                </span>
+              </div>
+            ))}
           </div>
         )}
 

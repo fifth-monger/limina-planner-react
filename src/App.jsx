@@ -144,14 +144,8 @@ export default function App() {
     return true
   })
 
-  // Alarms that should appear in today's timeline (active + includes this day)
-  const todayAlarms = alarms.filter(a => a.active && a.days.includes(activeDay))
+  // Shared time utilities used in both scheduling and rendering ─────────────────
 
-  // Merge blocks and alarms into one sorted list for the timeline.
-  // Both have a `time` field in HH:MM format, so we sort them together.
-  // _type is a discriminator: when we map over this array we check _type
-  // to decide whether to render a block component or an AlarmTick.
-  // The underscore prefix on _type is a convention meaning "internal use only".
   function timeToMinutes(time) {
     if (!time || time === '') return 1441
     if (time === 'eve') return 1380
@@ -159,10 +153,18 @@ export default function App() {
     return h * 60 + (m || 0)
   }
 
-  const timelineItems = [
-    ...visibleBlocks.map(b => ({ ...b, _type: 'block' })),
-    ...todayAlarms.map(a => ({ ...a, _type: 'alarm' })),
-  ].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time))
+  // Parse human-readable duration strings to minutes.
+  // Handles "~1 hr", "~2 hrs", "~1.5 hrs", "~30 min", "~45 min", "1 hr 30 min", etc.
+  function parseDurationToMinutes(duration) {
+    if (!duration) return 0
+    const s = duration.toLowerCase().replace(/~/g, '').trim()
+    let total = 0
+    const hrMatch = s.match(/(\d+\.?\d*)\s*hr/)
+    if (hrMatch) total += parseFloat(hrMatch[1]) * 60
+    const minMatch = s.match(/(\d+)\s*min/)
+    if (minMatch) total += parseInt(minMatch[1])
+    return total
+  }
 
   // Returns the duration string to display for a block.
   // If medium mode AND the block has a shorter mediumDuration, return that instead.
@@ -172,6 +174,59 @@ export default function App() {
     }
     return block.duration
   }
+
+  // Alarms that should appear today ───────────────────────────────────────────
+  const todayAlarms = alarms.filter(a => a.active && a.days.includes(activeDay))
+
+  // Categorize each alarm into one of three cases:
+  //
+  //   1. "during a block"  — alarm time falls strictly inside a block's window
+  //                          → render inside that block
+  //   2. "same time"       — alarm time exactly matches a block's start time
+  //                          → render as a standalone tick, sorted BEFORE the block
+  //   3. "standalone"      — no block overlaps at all
+  //                          → render as a standalone tick
+  //
+  // We build blockAlarmMap: { blockId → alarm[] } so each block knows its alarms.
+  // Alarms in blockAlarmMap are removed from the standalone list.
+  const blockAlarmMap = {}
+  const duringAlarmIds = new Set()
+
+  visibleBlocks.forEach(block => {
+    if (!block.time) return
+    const blockStart = timeToMinutes(block.time)
+    const blockDurationMin = parseDurationToMinutes(getBlockDuration(block))
+    if (blockDurationMin === 0) return  // can't determine window without a duration
+    const blockEnd = blockStart + blockDurationMin
+
+    todayAlarms.forEach(alarm => {
+      const alarmMin = timeToMinutes(alarm.time)
+      // Strictly inside: after block starts, before block ends
+      if (alarmMin > blockStart && alarmMin < blockEnd) {
+        if (!blockAlarmMap[block.id]) blockAlarmMap[block.id] = []
+        blockAlarmMap[block.id].push(alarm)
+        duringAlarmIds.add(alarm.id)
+      }
+    })
+  })
+
+  // Alarms not swallowed by a block go into the timeline as tick marks
+  const standaloneAlarms = todayAlarms.filter(a => !duringAlarmIds.has(a.id))
+
+  // Merge blocks and standalone alarms, sort by time.
+  // Tie-breaking rule: when times are equal, alarms sort BEFORE blocks
+  // so the alarm signal appears just above the block it precedes.
+  const timelineItems = [
+    ...visibleBlocks.map(b => ({ ...b, _type: 'block' })),
+    ...standaloneAlarms.map(a => ({ ...a, _type: 'alarm' })),
+  ].sort((a, b) => {
+    const diff = timeToMinutes(a.time) - timeToMinutes(b.time)
+    if (diff !== 0) return diff
+    // Same minute: alarms come first
+    if (a._type === 'alarm' && b._type !== 'alarm') return -1
+    if (a._type !== 'alarm' && b._type === 'alarm') return 1
+    return 0
+  })
 
   // Helper to update blocks for just the active day
   function setBlocks(updater) {
@@ -394,6 +449,7 @@ export default function App() {
                       block={item}
                       getBlockDuration={getBlockDuration}
                       bucketBacklog={bucketBacklog}
+                      inBlockAlarms={blockAlarmMap[item.id] ?? []}
                       onToggleSubtask={handleToggleSubtask}
                       onToggleBlock={handleToggleBlock}
                       onUpdateBlock={handleUpdateBlock}
@@ -408,6 +464,7 @@ export default function App() {
                     key={item.id}
                     block={item}
                     getBlockDuration={getBlockDuration}
+                    inBlockAlarms={blockAlarmMap[item.id] ?? []}
                     onToggleSubtask={handleToggleSubtask}
                     onToggleBlock={handleToggleBlock}
                     onUpdateBlock={handleUpdateBlock}
