@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { scheduleByDay, buckets, openQuestions, getWeekDays, dayNotes, dayNotesByMode, startHereByDay } from './data/initialData'
+import { scheduleByDay, buckets, openQuestions, getWeekDays, dayNotes, dayNotesByMode, startHereByDay, initialAlarms } from './data/initialData'
+import { requestNotificationPermission, scheduleAlarms, fireAlarm } from './utils/notifications'
 
 import TopBar from './components/layout/TopBar'
 import WeekStrip from './components/layout/WeekStrip'
@@ -7,10 +8,12 @@ import DayNote from './components/layout/DayNote'
 import TaskBlock from './components/blocks/TaskBlock'
 import FocusBlock from './components/blocks/FocusBlock'
 import BufferBlock from './components/blocks/BufferBlock'
+import AlarmTick from './components/blocks/AlarmTick'
 import Sidebar from './components/sidebar/Sidebar'
 import BucketsModal from './components/modals/BucketsModal'
 import OpenQuestionsModal from './components/modals/OpenQuestionsModal'
 import EnergyCheckInModal from './components/modals/EnergyCheckInModal'
+import AlarmsModal from './components/modals/AlarmsModal'
 
 // Build the week once at load time — dates are correct for whatever week it is today.
 const weekDays = getWeekDays()
@@ -29,6 +32,20 @@ export default function App() {
   const [activeDay, setActiveDay] = useState(todayDay)
   const [energyMode, setEnergyMode] = useState('productive')
   const [showCheckIn, setShowCheckIn] = useState(false)
+
+  // Alarms — lazy initialization reads from localStorage on first render only.
+  // useState(() => {...}) passes a FUNCTION instead of a value.
+  // React calls it once and uses the return value as the initial state.
+  // This is important because localStorage.getItem runs every render if you
+  // put it directly in useState(value) — with lazy init it only runs once.
+  const [alarms, setAlarms] = useState(() => {
+    try {
+      const stored = localStorage.getItem('limina-alarms')
+      return stored ? JSON.parse(stored) : initialAlarms
+    } catch {
+      return initialAlarms
+    }
+  })
 
   // Which bucket's detail panel is open in the sidebar (null = normal sidebar)
   const [activeBucketId, setActiveBucketId] = useState(null)
@@ -52,6 +69,53 @@ export default function App() {
       setShowCheckIn(true)
     }
   }, []) // empty array = run once, on first render only
+
+  // Ask for notification permission once on first load.
+  // useEffect with [] runs exactly once — after the first render, never again.
+  useEffect(() => {
+    requestNotificationPermission()
+  }, [])
+
+  // Persist alarms to localStorage whenever the alarms array changes.
+  // JSON.stringify converts our array to a string (localStorage only stores strings).
+  // JSON.parse (in the lazy init above) converts it back on next load.
+  useEffect(() => {
+    localStorage.setItem('limina-alarms', JSON.stringify(alarms))
+  }, [alarms])
+
+  // Reschedule alarms from scratch whenever alarms or the active day changes.
+  // useEffect with [alarms, activeDay] runs after the initial render AND
+  // any time either of those two values changes.
+  // We pass handleSnoozeAlarm as a callback — but it's defined below,
+  // so we use a wrapper function to avoid hoisting issues.
+  useEffect(() => {
+    scheduleAlarms(alarms, activeDay, (alarm) => handleSnoozeAlarm(alarm))
+  }, [alarms, activeDay]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleSnoozeAlarm(alarm) {
+    // Fire the alarm again after the snooze duration elapses
+    setTimeout(() => {
+      fireAlarm(alarm, handleSnoozeAlarm)
+    }, alarm.snoozeMinutes * 60 * 1000)
+  }
+
+  // ── Alarm CRUD handlers ──────────────────────────────────────────────────────
+
+  function handleAddAlarm(alarm) {
+    setAlarms(prev => [...prev, { ...alarm, id: 'alarm-' + Date.now() }])
+  }
+
+  function handleUpdateAlarm(id, changes) {
+    setAlarms(prev => prev.map(a => a.id === id ? { ...a, ...changes } : a))
+  }
+
+  function handleDeleteAlarm(id) {
+    setAlarms(prev => prev.filter(a => a.id !== id))
+  }
+
+  function handleToggleAlarm(id) {
+    setAlarms(prev => prev.map(a => a.id === id ? { ...a, active: !a.active } : a))
+  }
 
   function handleCheckInSelect(mode) {
     setEnergyMode(mode)
@@ -79,6 +143,26 @@ export default function App() {
     if (energyMode === 'bareMinimum') return block.energyLevel === 'bareMinimum' // anchors only
     return true
   })
+
+  // Alarms that should appear in today's timeline (active + includes this day)
+  const todayAlarms = alarms.filter(a => a.active && a.days.includes(activeDay))
+
+  // Merge blocks and alarms into one sorted list for the timeline.
+  // Both have a `time` field in HH:MM format, so we sort them together.
+  // _type is a discriminator: when we map over this array we check _type
+  // to decide whether to render a block component or an AlarmTick.
+  // The underscore prefix on _type is a convention meaning "internal use only".
+  function timeToMinutes(time) {
+    if (!time || time === '') return 1441
+    if (time === 'eve') return 1380
+    const [h, m] = time.split(':').map(Number)
+    return h * 60 + (m || 0)
+  }
+
+  const timelineItems = [
+    ...visibleBlocks.map(b => ({ ...b, _type: 'block' })),
+    ...todayAlarms.map(a => ({ ...a, _type: 'alarm' })),
+  ].sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time))
 
   // Returns the duration string to display for a block.
   // If medium mode AND the block has a shorter mediumDuration, return that instead.
@@ -209,13 +293,6 @@ export default function App() {
     }))
   }
 
-  function timeToMinutes(time) {
-    if (!time || time === '') return 1441
-    if (time === 'eve') return 1380
-    const [h, m] = time.split(':').map(Number)
-    return h * 60 + (m || 0)
-  }
-
   function handleUpdateBlock(blockId, changes) {
     setBlocks(prev => {
       const updated = prev.map(b => b.id === blockId ? { ...b, ...changes } : b)
@@ -300,17 +377,21 @@ export default function App() {
             <DayNote note={dayNote} />
 
             <div className="flex flex-col gap-3">
-              {visibleBlocks.map(block => {
-                if (block.type === 'buffer') {
-                  return <BufferBlock key={block.id} block={block} />
+              {timelineItems.map(item => {
+                // Alarm tick marks — lightweight spine annotations
+                if (item._type === 'alarm') {
+                  return <AlarmTick key={item.id} alarm={item} />
                 }
-                if (block.type === 'focus') {
-                  const bucket = allBuckets.find(b => b.id === block.bucketId)
-                  const bucketBacklog = bucket?.backlog.filter(item => !item.done) ?? []
+                if (item.type === 'buffer') {
+                  return <BufferBlock key={item.id} block={item} />
+                }
+                if (item.type === 'focus') {
+                  const bucket = allBuckets.find(b => b.id === item.bucketId)
+                  const bucketBacklog = bucket?.backlog.filter(bl => !bl.done) ?? []
                   return (
                     <FocusBlock
-                      key={block.id}
-                      block={block}
+                      key={item.id}
+                      block={item}
                       getBlockDuration={getBlockDuration}
                       bucketBacklog={bucketBacklog}
                       onToggleSubtask={handleToggleSubtask}
@@ -318,14 +399,14 @@ export default function App() {
                       onUpdateBlock={handleUpdateBlock}
                       onAddSubtask={handleAddSubtask}
                       onDeleteBlock={handleDeleteBlock}
-                      onPullFromBacklog={(itemId) => handlePullFromBacklog(block.id, block.bucketId, itemId)}
+                      onPullFromBacklog={(itemId) => handlePullFromBacklog(item.id, item.bucketId, itemId)}
                     />
                   )
                 }
                 return (
                   <TaskBlock
-                    key={block.id}
-                    block={block}
+                    key={item.id}
+                    block={item}
                     getBlockDuration={getBlockDuration}
                     onToggleSubtask={handleToggleSubtask}
                     onToggleBlock={handleToggleBlock}
@@ -425,7 +506,9 @@ export default function App() {
           buckets={allBuckets}
           bucketCounts={bucketCounts}
           questions={questions}
+          alarms={alarms}
           onOpenModal={setOpenModal}
+          onToggleAlarm={handleToggleAlarm}
           activeBucketId={activeBucketId}
           onSelectBucket={setActiveBucketId}
           onCloseBucket={() => setActiveBucketId(null)}
@@ -450,6 +533,14 @@ export default function App() {
       <EnergyCheckInModal
         isOpen={showCheckIn}
         onSelect={handleCheckInSelect}
+      />
+      <AlarmsModal
+        alarms={alarms}
+        isOpen={openModal === 'alarms'}
+        onClose={() => setOpenModal(null)}
+        onAdd={handleAddAlarm}
+        onUpdate={handleUpdateAlarm}
+        onDelete={handleDeleteAlarm}
       />
     </div>
   )

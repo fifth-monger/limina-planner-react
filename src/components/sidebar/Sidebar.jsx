@@ -1,12 +1,15 @@
 import BucketList from './BucketList'
 import BucketDetail from './BucketDetail'
 import OpenQuestions from './OpenQuestions'
+import AlarmList from './AlarmList'
 
 export default function Sidebar({
   buckets,
   bucketCounts,
   questions,
+  alarms,
   onOpenModal,
+  onToggleAlarm,
   activeBucketId,
   onSelectBucket,
   onCloseBucket,
@@ -46,6 +49,8 @@ export default function Sidebar({
       />
       <div className="border-t border-lborder" />
       <OpenQuestions questions={questions} onOpenModal={onOpenModal} />
+      <div className="border-t border-lborder" />
+      <AlarmList alarms={alarms} onOpenModal={onOpenModal} onToggleAlarm={onToggleAlarm} />
     </aside>
   )
 }

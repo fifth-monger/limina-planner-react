@@ -1,3 +1,35 @@
+// ── Alarms ───────────────────────────────────────────────────────────────────
+// Each alarm has a consistent schema (shape) — same fields, every time.
+// That predictability is what lets the rest of the code safely read alarm.time,
+// alarm.days, etc. without checking if they exist.
+export const initialAlarms = [
+  {
+    id: 'alarm-1',
+    label: 'cannabis window opens',
+    time: '14:00',
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    snoozeMinutes: 10,
+    active: true,
+  },
+  {
+    id: 'alarm-2',
+    label: 'stop eating for the night',
+    time: '20:00',
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    snoozeMinutes: 15,
+    active: true,
+  },
+  {
+    id: 'alarm-3',
+    label: 'screens down in 30 min',
+    time: '21:30',
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    snoozeMinutes: 10,
+    active: true,
+  },
+]
+
+// ── Buckets ───────────────────────────────────────────────────────────────────
 export const buckets = [
   {
     id: 'hemingway',
