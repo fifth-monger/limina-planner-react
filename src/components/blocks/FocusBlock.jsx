@@ -2,13 +2,15 @@ import { useState } from 'react'
 import SubTask from './SubTask'
 import TimePicker from './TimePicker'
 
-export default function FocusBlock({ block, getBlockDuration, onToggleSubtask, onToggleBlock, onUpdateBlock, onAddSubtask, onDeleteBlock }) {
+export default function FocusBlock({ block, getBlockDuration, bucketBacklog = [], onToggleSubtask, onToggleBlock, onUpdateBlock, onAddSubtask, onDeleteBlock, onPullFromBacklog }) {
   const allDone = block.subtasks.length > 0 && block.subtasks.every(st => st.done)
 
   const [editingField, setEditingField] = useState(null)
   const [fieldValue, setFieldValue] = useState('')
   const [addingTask, setAddingTask] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
+  // Local state: is the backlog picker open? Nothing outside this block needs to know.
+  const [showBacklogPicker, setShowBacklogPicker] = useState(false)
 
   function startEdit(field) {
     setEditingField(field)
@@ -162,6 +164,53 @@ export default function FocusBlock({ block, getBlockDuration, onToggleSubtask, o
           >
             + add task
           </button>
+        )}
+
+        {/* Pull from backlog — only show if there are undone backlog items */}
+        {bucketBacklog.length > 0 && (
+          <div className="mt-1">
+            {!showBacklogPicker ? (
+              <button
+                onClick={() => setShowBacklogPicker(true)}
+                className="font-mono text-[9px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
+              >
+                + pull from backlog
+              </button>
+            ) : (
+              <div className="mt-2 rounded-xl border border-lborder bg-surface shadow-sm overflow-hidden">
+                {/* Picker header */}
+                <div className="flex items-center justify-between px-3 py-2 border-b border-lborder">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted">Backlog</span>
+                  <button
+                    onClick={() => setShowBacklogPicker(false)}
+                    className="text-muted hover:text-charcoal text-base leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+                {/* Backlog items */}
+                <div className="flex flex-col">
+                  {bucketBacklog.map(item => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        onPullFromBacklog(item.id)
+                        // Close picker automatically when backlog will be empty after this pull
+                        if (bucketBacklog.length <= 1) setShowBacklogPicker(false)
+                      }}
+                      className="flex items-center gap-2.5 px-3 py-2 hover:bg-parchment transition-colors text-left"
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border-2 flex-shrink-0"
+                        style={{ borderColor: block.color + '80' }}
+                      />
+                      <span className="font-sans text-sm text-charcoal">{item.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {block.tip && (

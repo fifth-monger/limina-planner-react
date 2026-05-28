@@ -30,6 +30,9 @@ export default function App() {
   const [energyMode, setEnergyMode] = useState('productive')
   const [showCheckIn, setShowCheckIn] = useState(false)
 
+  // Which bucket's detail panel is open in the sidebar (null = normal sidebar)
+  const [activeBucketId, setActiveBucketId] = useState(null)
+
   // 'type' → choosing task vs focus | 'focus-bucket' → picking a bucket
   const [addingStep, setAddingStep] = useState(null)
   const [selectedBucketId, setSelectedBucketId] = useState('')
@@ -110,15 +113,88 @@ export default function App() {
     return acc
   }, {})
 
-  function handleToggleSubtask(blockId, subtaskId) {
+  // ── Backlog handlers ────────────────────────────────────────────────────────
+
+  function handleAddBacklogItem(bucketId, text) {
+    setAllBuckets(prev => prev.map(b => {
+      if (b.id !== bucketId) return b
+      return {
+        ...b,
+        backlog: [...b.backlog, { id: 'bl-' + Date.now(), text, done: false }],
+      }
+    }))
+  }
+
+  function handleToggleBacklogItem(bucketId, itemId) {
+    setAllBuckets(prev => prev.map(b => {
+      if (b.id !== bucketId) return b
+      return {
+        ...b,
+        backlog: b.backlog.map(item =>
+          item.id === itemId ? { ...item, done: !item.done } : item
+        ),
+      }
+    }))
+  }
+
+  function handleDeleteBacklogItem(bucketId, itemId) {
+    setAllBuckets(prev => prev.map(b => {
+      if (b.id !== bucketId) return b
+      return {
+        ...b,
+        backlog: b.backlog.filter(item => item.id !== itemId),
+      }
+    }))
+  }
+
+  // Pull a backlog item into a focus block as a subtask.
+  // Stores a backlogRef on the subtask so we can sync completion later.
+  function handlePullFromBacklog(blockId, bucketId, itemId) {
+    const bucket = allBuckets.find(b => b.id === bucketId)
+    const item = bucket?.backlog.find(i => i.id === itemId)
+    if (!item) return
+
+    // Add it as a subtask with a backlogRef pointing back to its source
     setBlocks(prev => prev.map(block => {
       if (block.id !== blockId) return block
       return {
         ...block,
-        subtasks: block.subtasks.map(st =>
-          st.id === subtaskId ? { ...st, done: !st.done } : st
-        )
+        subtasks: [
+          ...block.subtasks,
+          {
+            id: 'st-' + Date.now(),
+            text: item.text,
+            done: false,
+            backlogRef: { bucketId, itemId },
+          },
+        ],
       }
+    }))
+
+    // Mark it done in the backlog so it doesn't appear in the picker again
+    handleToggleBacklogItem(bucketId, itemId)
+  }
+
+  // ── Subtask / block handlers ─────────────────────────────────────────────────
+
+  function handleToggleSubtask(blockId, subtaskId) {
+    setBlocks(prev => prev.map(block => {
+      if (block.id !== blockId) return block
+
+      const updatedSubtasks = block.subtasks.map(st =>
+        st.id === subtaskId ? { ...st, done: !st.done } : st
+      )
+
+      // If the toggled subtask came from the backlog, keep the backlog in sync.
+      // setTimeout(…, 0) pushes this into the next event-loop tick so React
+      // doesn't try to update two state slices in the same synchronous call.
+      const toggled = updatedSubtasks.find(st => st.id === subtaskId)
+      if (toggled?.done && toggled?.backlogRef) {
+        const { bucketId, itemId } = toggled.backlogRef
+        setTimeout(() => handleToggleBacklogItem(bucketId, itemId), 0)
+      }
+
+      return { ...block, subtasks: updatedSubtasks }
     }))
   }
 
@@ -229,16 +305,20 @@ export default function App() {
                   return <BufferBlock key={block.id} block={block} />
                 }
                 if (block.type === 'focus') {
+                  const bucket = allBuckets.find(b => b.id === block.bucketId)
+                  const bucketBacklog = bucket?.backlog.filter(item => !item.done) ?? []
                   return (
                     <FocusBlock
                       key={block.id}
                       block={block}
                       getBlockDuration={getBlockDuration}
+                      bucketBacklog={bucketBacklog}
                       onToggleSubtask={handleToggleSubtask}
                       onToggleBlock={handleToggleBlock}
                       onUpdateBlock={handleUpdateBlock}
                       onAddSubtask={handleAddSubtask}
                       onDeleteBlock={handleDeleteBlock}
+                      onPullFromBacklog={(itemId) => handlePullFromBacklog(block.id, block.bucketId, itemId)}
                     />
                   )
                 }
@@ -346,6 +426,12 @@ export default function App() {
           bucketCounts={bucketCounts}
           questions={questions}
           onOpenModal={setOpenModal}
+          activeBucketId={activeBucketId}
+          onSelectBucket={setActiveBucketId}
+          onCloseBucket={() => setActiveBucketId(null)}
+          onAddBacklogItem={handleAddBacklogItem}
+          onToggleBacklogItem={handleToggleBacklogItem}
+          onDeleteBacklogItem={handleDeleteBacklogItem}
         />
       </div>
 

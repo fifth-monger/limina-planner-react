@@ -1,9 +1,57 @@
 export const buckets = [
-  { id: 'hemingway', name: 'Hemingway',     color: '#D85A30' },
-  { id: 'japanese',  name: 'Japanese',      color: '#9070B8' },
-  { id: 'rv',        name: 'RV repairs',    color: '#C8922A' },
-  { id: 'jobs',      name: 'Job hunt',      color: '#378ADD' },
-  { id: 'studio',    name: 'limina.studio', color: '#639922' },
+  {
+    id: 'hemingway',
+    name: 'Hemingway',
+    color: '#D85A30',
+    backlog: [
+      { id: 'hem-bl-1', text: 'Write project README', done: false },
+      { id: 'hem-bl-2', text: 'Set up CI pipeline', done: false },
+      { id: 'hem-bl-3', text: 'Review open PRs', done: false },
+    ],
+  },
+  {
+    id: 'japanese',
+    name: 'Japanese',
+    color: '#9070B8',
+    backlog: [
+      { id: 'jp-bl-1', text: 'Learn hiragana row: na, ni, nu, ne, no', done: false },
+      { id: 'jp-bl-2', text: 'Practice katakana for 15 min', done: false },
+    ],
+  },
+  {
+    id: 'rv',
+    name: 'RV repairs',
+    color: '#C8922A',
+    backlog: [
+      { id: 'rv-bl-1', text: 'Check front-left slide-out rubber seal', done: false },
+      { id: 'rv-bl-2', text: 'Source corner trim for front-left rot', done: false },
+      { id: 'rv-bl-3', text: 'Price underbelly tarp replacement', done: false },
+      { id: 'rv-bl-4', text: 'Inspect roof seals + note any cracks', done: false },
+      { id: 'rv-bl-5', text: 'Research belly board insulation options', done: false },
+      { id: 'rv-bl-6', text: 'Call RV repair shop for corner trim quote', done: false },
+    ],
+  },
+  {
+    id: 'jobs',
+    name: 'Job hunt',
+    color: '#378ADD',
+    backlog: [
+      { id: 'jobs-bl-1', text: 'Update resume with AI workflow skills', done: false },
+      { id: 'jobs-bl-2', text: 'Follow up with Provi contact', done: false },
+      { id: 'jobs-bl-3', text: 'Research 3 new companies to target', done: false },
+    ],
+  },
+  {
+    id: 'studio',
+    name: 'limina.studio',
+    color: '#639922',
+    backlog: [
+      { id: 'studio-bl-1', text: 'Build energy mode UI — Phase 2A', done: true },
+      { id: 'studio-bl-2', text: 'Build backlog system — Phase 2B', done: false },
+      { id: 'studio-bl-3', text: 'Set up PWA + alarms — Phase 2C', done: false },
+      { id: 'studio-bl-4', text: 'Visual redesign pass', done: false },
+    ],
+  },
 ]
 
 export const openQuestions = [
