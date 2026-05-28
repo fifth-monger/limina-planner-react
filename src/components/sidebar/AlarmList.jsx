@@ -20,7 +20,7 @@ export default function AlarmList({ alarms, onOpenModal, onToggleAlarm }) {
         {alarms.length === 0 && (
           <p className="font-mono text-[9px] italic text-muted">no alarms set</p>
         )}
-        {alarms.map(alarm => (
+        {[...alarms].sort((a, b) => a.time.localeCompare(b.time)).map(alarm => (
           <div key={alarm.id} className="flex items-start gap-2">
             <span className="text-[11px] mt-0.5 flex-shrink-0">🔔</span>
             <div className="flex-1 min-w-0">
