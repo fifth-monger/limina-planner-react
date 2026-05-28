@@ -24,7 +24,7 @@ export default function AlarmList({ alarms, onOpenModal, onToggleAlarm }) {
           <div key={alarm.id} className="flex items-start gap-2">
             <span className="text-[11px] mt-0.5 flex-shrink-0">🔔</span>
             <div className="flex-1 min-w-0">
-              <span className="font-mono text-[10px] text-muted mr-1.5">
+              <span className="font-mono text-[10px] text-muted mr-1.5 whitespace-nowrap">
                 {formatTimeDisplay(alarm.time)}
               </span>
               <span className={`font-sans text-sm ${alarm.active ? 'text-charcoal' : 'text-muted line-through'}`}>
