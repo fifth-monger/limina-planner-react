@@ -41,8 +41,8 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
 
   return (
     <div
-      className="group rounded-xl border border-borderAccent bg-cardTask p-0 flex overflow-hidden"
-      style={{ borderLeftWidth: '4px', borderLeftColor: block.color }}
+      className="group rounded-xl border border-borderAccent bg-white/50 p-0 flex overflow-hidden"
+      style={{ borderLeftWidth: '4px', borderLeftColor: '#D0CBC0' }}
     >
       <div className="flex-1 p-4 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-3">
@@ -102,7 +102,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
 
             {isAnchor && (
               <span className="inline-block font-mono text-[10px] uppercase tracking-widest text-textMeta px-2 py-0.5 rounded mt-1">
-                ⚓ task · daily
+                ⚓ anchor
               </span>
             )}
             {block.note && (
@@ -171,10 +171,10 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
                 className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border border-dashed border-lborder"
               >
                 <span className="text-[10px] flex-shrink-0">🔔</span>
-                <span className="font-mono text-[9px] text-muted flex-shrink-0">
+                <span className="font-mono text-[10px] text-muted flex-shrink-0">
                   {formatTimeDisplay(alarm.time)}
                 </span>
-                <span className="font-mono text-[9px] text-charcoal italic truncate">
+                <span className="font-mono text-[10px] text-charcoal italic truncate">
                   {alarm.label}
                 </span>
               </div>
@@ -186,7 +186,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
           <div
             className="bg-cerulean-light/40 mt-3 rounded-lg px-3 py-2"
           >
-            <p className="font-mono text-[9px] text-cerulean/80 leading-snug">
+            <p className="font-mono text-[10px] text-cerulean/80 leading-snug">
               <span className="mr-1">🧠</span>{block.tip}
             </p>
           </div>

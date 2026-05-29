@@ -42,7 +42,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
 
   return (
     <div
-      className="group rounded-xl border border-borderAccent bg-surface p-0 flex overflow-hidden"
+      className="group rounded-xl border border-borderAccent bg-white p-0 flex overflow-hidden"
       style={{ borderLeftWidth: '4px', borderLeftColor: block.color }}
     >
       <div className="flex-1 p-4 min-w-0">
@@ -156,7 +156,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
         ) : (
           <button
             onClick={() => setAddingTask(true)}
-            className="mt-2.5 font-mono text-[9px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
+            className="mt-2.5 font-mono text-[10px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
           >
             + add task
           </button>
@@ -168,7 +168,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
             {!showBacklogPicker ? (
               <button
                 onClick={() => setShowBacklogPicker(true)}
-                className="font-mono text-[9px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
+                className="font-mono text-[10px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
               >
                 + pull from backlog
               </button>
@@ -176,7 +176,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
               <div className="mt-2 rounded-xl border border-lborder bg-surface shadow-sm overflow-hidden">
                 {/* Picker header */}
                 <div className="flex items-center justify-between px-3 py-2 border-b border-lborder">
-                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted">Backlog</span>
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted">Backlog</span>
                   <button
                     onClick={() => setShowBacklogPicker(false)}
                     className="text-muted hover:text-charcoal text-base leading-none"
@@ -240,7 +240,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
           </div>
         )}
 
-        <p className="font-mono text-[9px] uppercase tracking-widest text-moss mt-3">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-moss mt-3">
           skipped tasks roll, not fail
         </p>
       </div>

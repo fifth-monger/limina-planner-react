@@ -94,14 +94,14 @@ export default function AlarmsModal({ alarms, isOpen, onClose, onAdd, onUpdate, 
               {editingId !== alarm.id ? (
                 <div className="flex items-center gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-sans text-sm text-charcoal truncate">{alarm.label}</p>
-                    <p className="font-mono text-[9px] text-muted mt-0.5">
+                    <p className="font-sans text-md text-charcoal truncate">{alarm.label}</p>
+                    <p className="font-mono text-[10px] text-muted mt-0.5">
                       {formatTime12(alarm.time)} · {formatDays(alarm.days)} · snooze {alarm.snoozeMinutes} min
                     </p>
                   </div>
                   <button
                     onClick={() => startEdit(alarm)}
-                    className="font-mono text-[9px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors flex-shrink-0 px-2 py-1"
+                    className="font-mono text-[10px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors flex-shrink-0 px-2 py-1"
                   >
                     edit
                   </button>
@@ -159,7 +159,7 @@ function EditForm({ draft, setDraft, onToggleDay, onCancel, onSave }) {
     <div className="px-4 py-3 bg-parchment flex flex-col gap-3">
       {/* Label */}
       <div>
-        <label className="font-mono text-[9px] uppercase tracking-widest text-muted block mb-1">Label</label>
+        <label className="font-mono text-[10px] uppercase tracking-widest text-muted block mb-1">Label</label>
         <input
           className="w-full font-sans text-sm text-charcoal bg-white border border-lborder rounded-lg px-3 py-1.5 outline-none focus:border-cerulean transition-colors"
           value={draft.label}
@@ -171,7 +171,7 @@ function EditForm({ draft, setDraft, onToggleDay, onCancel, onSave }) {
 
       {/* Time */}
       <div>
-        <label className="font-mono text-[9px] uppercase tracking-widest text-muted block mb-1">Time</label>
+        <label className="font-mono text-[10px] uppercase tracking-widest text-muted block mb-1">Time</label>
         <div className="flex items-center gap-2">
           {/* Hour */}
           <select
@@ -212,7 +212,7 @@ function EditForm({ draft, setDraft, onToggleDay, onCancel, onSave }) {
 
       {/* Days */}
       <div>
-        <label className="font-mono text-[9px] uppercase tracking-widest text-muted block mb-1">Days</label>
+        <label className="font-mono text-[10px] uppercase tracking-widest text-muted block mb-1">Days</label>
         <div className="flex gap-1 flex-wrap">
           {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(day => {
             const active = draft.days.includes(day)
@@ -220,7 +220,7 @@ function EditForm({ draft, setDraft, onToggleDay, onCancel, onSave }) {
               <button
                 key={day}
                 onClick={() => onToggleDay(day)}
-                className={`font-mono text-[9px] uppercase tracking-widest px-2 py-1 rounded-md border transition-colors
+                className={`font-mono text-[10px] uppercase tracking-widest px-2 py-1 rounded-md border transition-colors
                   ${active
                     ? 'bg-charcoal text-white border-charcoal'
                     : 'bg-white text-muted border-lborder hover:border-charcoal'}`}
@@ -234,7 +234,7 @@ function EditForm({ draft, setDraft, onToggleDay, onCancel, onSave }) {
 
       {/* Snooze */}
       <div>
-        <label className="font-mono text-[9px] uppercase tracking-widest text-muted block mb-1">Snooze</label>
+        <label className="font-mono text-[10px] uppercase tracking-widest text-muted block mb-1">Snooze</label>
         <div className="flex items-center gap-2">
           <input
             type="number"
@@ -250,7 +250,7 @@ function EditForm({ draft, setDraft, onToggleDay, onCancel, onSave }) {
 
       {/* Active toggle */}
       <div className="flex items-center gap-3">
-        <label className="font-mono text-[9px] uppercase tracking-widest text-muted">Active</label>
+        <label className="font-mono text-[10px] uppercase tracking-widest text-muted">Active</label>
         <button
           onClick={() => setDraft(prev => ({ ...prev, active: !prev.active }))}
           className={`w-8 h-4 rounded-full transition-colors relative flex-shrink-0
