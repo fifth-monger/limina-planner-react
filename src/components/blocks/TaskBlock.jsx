@@ -56,7 +56,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
               <span className="font-mono text-[12px] text-textMeta">·</span>
               {editingField === 'duration' ? (
                 <input
-                  className="font-mono text-[12px] text-textMeta bg-transparent border-b border-cerulean outline-none w-24"
+                  className="font-mono text-[12px] text-textMeta bg-white/60 border-b border-cerulean outline-none w-24"
                   value={fieldValue}
                   onChange={e => setFieldValue(e.target.value)}
                   onBlur={commitEdit}
