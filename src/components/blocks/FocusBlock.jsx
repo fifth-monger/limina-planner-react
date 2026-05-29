@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import SubTask from './SubTask'
 import TimePicker, { formatTimeDisplay } from './TimePicker'
+import { calcEndTime } from '../../utils/time'
 
-export default function FocusBlock({ block, getBlockDuration, bucketBacklog = [], inBlockAlarms = [], onToggleSubtask, onToggleBlock, onUpdateBlock, onAddSubtask, onDeleteBlock, onPullFromBacklog }) {
+export default function FocusBlock({ block, getBlockDuration, bucketBacklog = [], inBlockAlarms = [], onToggleSubtask, onToggleBlock, onUpdateBlock, onAddSubtask, onDeleteBlock, onPullFromBacklog, onEditBlock }) {
   const allDone = block.subtasks.length > 0 && block.subtasks.every(st => st.done)
+  const endTime = calcEndTime(block.time, getBlockDuration(block))
 
   const [editingField, setEditingField] = useState(null)
   const [fieldValue, setFieldValue] = useState('')
@@ -121,6 +123,15 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
+            <button
+              onClick={() => onEditBlock(block)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-lborder hover:text-cerulean"
+              title="Edit block"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+                <path d="M11.5 2.5a1.414 1.414 0 012 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
             <button
               onClick={() => onDeleteBlock(block.id)}
               className="opacity-0 group-hover:opacity-100 transition-opacity text-lborder hover:text-coral"
@@ -257,6 +268,13 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
         <p className="font-mono text-[10px] uppercase tracking-widest text-moss mt-3">
           skipped tasks roll, not fail
         </p>
+
+        {/* End time — mirrors the start time shown in the header */}
+        {endTime && (
+          <div className="mt-3 pt-2 border-t border-borderCard/60">
+            <span className="font-mono text-[10px] text-textMeta">ends {endTime}</span>
+          </div>
+        )}
       </div>
     </div>
   )

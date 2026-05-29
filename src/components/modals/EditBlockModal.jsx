@@ -1,70 +1,63 @@
 import { useState, useEffect } from 'react'
 import TimePicker from '../blocks/TimePicker'
 
-const ALL_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
 const TYPE_OPTIONS = [
   { id: 'anchor', label: '⚓ anchor', description: 'Habit, resets daily' },
   { id: 'focus',  label: 'focus',    description: 'Project work' },
   { id: 'note',   label: 'note',     description: 'Reminder or label' },
 ]
 
-const BLANK = (defaultDay, buckets) => ({
-  label: '',
-  time: '',
-  duration: '',
-  days: defaultDay ? [defaultDay] : [],
-  type: 'anchor',
-  bucketId: buckets[0]?.id ?? '',
-  repeats: false,
-})
+// Derive the type string from a block object
+function blockToType(block) {
+  if (block.type === 'focus') return 'focus'
+  if (block.type === 'note')  return 'note'
+  return 'anchor'
+}
 
-export default function AddBlockModal({ isOpen, onClose, onAdd, buckets, defaultDay }) {
-  const [draft, setDraft] = useState(() => BLANK(defaultDay, buckets))
+export default function EditBlockModal({ block, buckets, isOpen, onClose, onSave }) {
+  const [draft, setDraft] = useState(null)
 
-  // Reset form each time the modal opens
+  // Populate draft whenever the modal opens with a block
   useEffect(() => {
-    if (isOpen) setDraft(BLANK(defaultDay, buckets))
-  }, [isOpen]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (isOpen && block) {
+      setDraft({
+        label:    block.name    ?? '',
+        time:     block.time    ?? '',
+        duration: block.duration ?? '',
+        type:     blockToType(block),
+        bucketId: block.bucketId ?? buckets[0]?.id ?? '',
+      })
+    }
+  }, [isOpen, block]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!isOpen) return null
-
-  function toggleDay(day) {
-    setDraft(prev => ({
-      ...prev,
-      days: prev.days.includes(day)
-        ? prev.days.filter(d => d !== day)
-        : [...prev.days, day],
-    }))
-  }
+  if (!isOpen || !draft || !block) return null
 
   function handleSave() {
-    if (!draft.label.trim() || draft.days.length === 0) return
+    if (!draft.label.trim()) return
 
     const base = {
-      name: draft.label.trim(),
-      time: draft.time,
+      name:     draft.label.trim(),
+      time:     draft.time,
       duration: draft.duration.trim(),
-      subtasks: [],
-      repeats: draft.repeats,
     }
 
-    let blockData
+    let changes
     if (draft.type === 'anchor') {
-      blockData = { ...base, type: 'task', isLifeAnchor: true, color: '#B09070', energyLevel: 'bareMinimum' }
+      changes = { ...base, type: 'task', isLifeAnchor: true, isOneOff: false,
+                  color: '#B09070', energyLevel: 'bareMinimum', bucketId: undefined }
     } else if (draft.type === 'focus') {
       const bucket = buckets.find(b => b.id === draft.bucketId) ?? buckets[0]
       if (!bucket) return
-      blockData = { ...base, type: 'focus', name: bucket.name, bucketId: bucket.id, color: bucket.color, energyLevel: 'productive' }
+      changes = { ...base, type: 'focus', name: bucket.name, isLifeAnchor: false,
+                  bucketId: bucket.id, color: bucket.color, energyLevel: 'productive' }
     } else {
-      blockData = { ...base, type: 'note', color: '#C4BAA8', energyLevel: 'medium' }
+      changes = { ...base, type: 'note', isLifeAnchor: false, isOneOff: false,
+                  color: '#C4BAA8', energyLevel: 'medium', bucketId: undefined }
     }
 
-    onAdd(draft.days, blockData)
+    onSave(block.id, changes)
     onClose()
   }
-
-  const canSave = draft.label.trim().length > 0 && draft.days.length > 0
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -72,7 +65,7 @@ export default function AddBlockModal({ isOpen, onClose, onAdd, buckets, default
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-borderCard flex-shrink-0">
-          <h2 className="font-serif text-xl text-charcoal">New Block</h2>
+          <h2 className="font-serif text-xl text-charcoal">Edit Block</h2>
           <button onClick={onClose} className="text-muted hover:text-charcoal transition-colors text-xl leading-none">
             ×
           </button>
@@ -83,24 +76,19 @@ export default function AddBlockModal({ isOpen, onClose, onAdd, buckets, default
 
           {/* Label */}
           <div>
-            <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">
-              Label
-            </label>
+            <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">Label</label>
             <input
               className="w-full font-sans text-sm text-charcoal bg-parchment border border-borderCard rounded-lg px-3 py-2 outline-none focus:border-cerulean transition-colors"
               value={draft.label}
               onChange={e => setDraft(prev => ({ ...prev, label: e.target.value }))}
-              onKeyDown={e => { if (e.key === 'Enter' && canSave) handleSave() }}
-              placeholder="block name…"
+              onKeyDown={e => { if (e.key === 'Enter' && draft.label.trim()) handleSave() }}
               autoFocus
             />
           </div>
 
           {/* Time */}
           <div>
-            <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">
-              Time
-            </label>
+            <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">Time</label>
             <TimePicker
               value={draft.time}
               onChange={time => setDraft(prev => ({ ...prev, time }))}
@@ -122,9 +110,7 @@ export default function AddBlockModal({ isOpen, onClose, onAdd, buckets, default
 
           {/* Type */}
           <div>
-            <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">
-              Type
-            </label>
+            <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">Type</label>
             <div className="flex gap-2">
               {TYPE_OPTIONS.map(opt => (
                 <button
@@ -147,9 +133,7 @@ export default function AddBlockModal({ isOpen, onClose, onAdd, buckets, default
           {/* Bucket selector — only when type is focus */}
           {draft.type === 'focus' && (
             <div>
-              <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">
-                Bucket
-              </label>
+              <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">Bucket</label>
               <div className="flex flex-wrap gap-2">
                 {buckets.map(b => (
                   <button
@@ -168,47 +152,6 @@ export default function AddBlockModal({ isOpen, onClose, onAdd, buckets, default
               </div>
             </div>
           )}
-
-          {/* Days */}
-          <div>
-            <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta block mb-1.5">
-              Days
-            </label>
-            <div className="flex gap-1.5 flex-wrap">
-              {ALL_DAYS.map(day => {
-                const active = draft.days.includes(day)
-                return (
-                  <button
-                    key={day}
-                    onClick={() => toggleDay(day)}
-                    className={`font-mono text-[9px] uppercase tracking-widest px-2.5 py-1.5 rounded-lg border transition-colors
-                      ${active
-                        ? 'bg-charcoal text-white border-charcoal'
-                        : 'bg-parchment text-textMeta border-borderCard hover:border-charcoal'}`}
-                  >
-                    {day}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Repeats */}
-          <div className="flex items-center gap-3">
-            <label className="font-mono text-[9px] uppercase tracking-widest text-textMeta">
-              Repeats
-            </label>
-            <button
-              onClick={() => setDraft(prev => ({ ...prev, repeats: !prev.repeats }))}
-              className={`w-8 h-4 rounded-full transition-colors relative flex-shrink-0
-                ${draft.repeats ? 'bg-cerulean' : 'bg-borderCard'}`}
-            >
-              <span
-                className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform
-                  ${draft.repeats ? 'translate-x-4' : 'translate-x-0.5'}`}
-              />
-            </button>
-          </div>
         </div>
 
         {/* Footer */}
@@ -221,10 +164,10 @@ export default function AddBlockModal({ isOpen, onClose, onAdd, buckets, default
           </button>
           <button
             onClick={handleSave}
-            disabled={!canSave}
+            disabled={!draft.label.trim()}
             className="flex-1 font-sans text-sm text-white bg-cerulean rounded-xl py-2 hover:bg-[#3A8FB4] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Add block
+            Save changes
           </button>
         </div>
       </div>

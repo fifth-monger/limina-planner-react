@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { scheduleByDay, buckets, openQuestions, getWeekDays, dayNotes, dayNotesByMode, startHereByDay, initialAlarms } from './data/initialData'
 import { requestNotificationPermission, scheduleAlarms, fireAlarm } from './utils/notifications'
+import { timeToMinutes, parseDurationToMinutes } from './utils/time'
 
 import TopBar from './components/layout/TopBar'
 import WeekStrip from './components/layout/WeekStrip'
@@ -16,6 +17,7 @@ import OpenQuestionsModal from './components/modals/OpenQuestionsModal'
 import EnergyCheckInModal from './components/modals/EnergyCheckInModal'
 import AlarmsModal from './components/modals/AlarmsModal'
 import AddBlockModal from './components/modals/AddBlockModal'
+import EditBlockModal from './components/modals/EditBlockModal'
 
 // Build the week once at load time — dates are correct for whatever week it is today.
 const weekDays = getWeekDays()
@@ -53,6 +55,7 @@ export default function App() {
   const [activeBucketId, setActiveBucketId] = useState(null)
 
   const [showAddBlock, setShowAddBlock] = useState(false)
+  const [editingBlock, setEditingBlock] = useState(null) // the full block object being edited
 
   // On mount: check if the user already checked in today.
   // localStorage stores plain strings — 'limina-checkin-date' is something like "Wed May 27 2026".
@@ -143,28 +146,6 @@ export default function App() {
     if (energyMode === 'bareMinimum') return block.energyLevel === 'bareMinimum' // anchors only
     return true
   })
-
-  // Shared time utilities used in both scheduling and rendering ─────────────────
-
-  function timeToMinutes(time) {
-    if (!time || time === '') return 1441
-    if (time === 'eve') return 1380
-    const [h, m] = time.split(':').map(Number)
-    return h * 60 + (m || 0)
-  }
-
-  // Parse human-readable duration strings to minutes.
-  // Handles "~1 hr", "~2 hrs", "~1.5 hrs", "~30 min", "~45 min", "1 hr 30 min", etc.
-  function parseDurationToMinutes(duration) {
-    if (!duration) return 0
-    const s = duration.toLowerCase().replace(/~/g, '').trim()
-    let total = 0
-    const hrMatch = s.match(/(\d+\.?\d*)\s*hr/)
-    if (hrMatch) total += parseFloat(hrMatch[1]) * 60
-    const minMatch = s.match(/(\d+)\s*min/)
-    if (minMatch) total += parseInt(minMatch[1])
-    return total
-  }
 
   // Returns the duration string to display for a block.
   // If medium mode AND the block has a shorter mediumDuration, return that instead.
@@ -369,6 +350,15 @@ export default function App() {
     }))
   }
 
+  // Edit an existing block — type changes are handled by spreading changes over the existing block.
+  // Sorts the day's blocks by time after saving.
+  function handleEditBlock(blockId, changes) {
+    setBlocks(prev => {
+      const updated = prev.map(b => b.id === blockId ? { ...b, ...changes } : b)
+      return updated.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time))
+    })
+  }
+
   // Add one or more blocks from the AddBlockModal.
   // Receives a days array and a blockData object (no ID — we assign IDs here).
   // All days are updated in a single state transaction to avoid multiple re-renders.
@@ -414,7 +404,7 @@ export default function App() {
                   return <AlarmTick key={item.id} alarm={item} />
                 }
                 if (item.type === 'note') {
-                  return <NoteBlock key={item.id} block={item} onDeleteBlock={handleDeleteBlock} />
+                  return <NoteBlock key={item.id} block={item} onEditBlock={setEditingBlock} onDeleteBlock={handleDeleteBlock} />
                 }
                 if (item.type === 'buffer') {
                   return <BufferBlock key={item.id} block={item} />
@@ -435,6 +425,7 @@ export default function App() {
                       onAddSubtask={handleAddSubtask}
                       onDeleteBlock={handleDeleteBlock}
                       onPullFromBacklog={(itemId) => handlePullFromBacklog(item.id, item.bucketId, itemId)}
+                      onEditBlock={setEditingBlock}
                     />
                   )
                 }
@@ -449,6 +440,7 @@ export default function App() {
                     onUpdateBlock={handleUpdateBlock}
                     onAddSubtask={handleAddSubtask}
                     onDeleteBlock={handleDeleteBlock}
+                    onEditBlock={setEditingBlock}
                   />
                 )
               })}
@@ -510,6 +502,13 @@ export default function App() {
         onAdd={handleAddBlock}
         buckets={allBuckets}
         defaultDay={activeDay}
+      />
+      <EditBlockModal
+        block={editingBlock}
+        buckets={allBuckets}
+        isOpen={editingBlock !== null}
+        onClose={() => setEditingBlock(null)}
+        onSave={handleEditBlock}
       />
     </div>
   )
