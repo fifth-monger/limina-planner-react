@@ -10,7 +10,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
   const [fieldValue, setFieldValue] = useState('')
   const [addingTask, setAddingTask] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
 
   function startEdit(field) {
     setEditingField(field)

@@ -11,7 +11,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
   const [newTaskText, setNewTaskText] = useState('')
   // Local state: is the backlog picker open? Nothing outside this block needs to know.
   const [showBacklogPicker, setShowBacklogPicker] = useState(false)
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
 
   function startEdit(field) {
     setEditingField(field)
