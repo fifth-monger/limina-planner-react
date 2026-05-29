@@ -29,9 +29,26 @@ const DAY_NAMES = {
 }
 
 export default function App() {
-  const [blocksByDay, setBlocksByDay] = useState(scheduleByDay)
-  const [allBuckets, setAllBuckets] = useState(buckets)
-  const [questions, setQuestions] = useState(openQuestions)
+  const [blocksByDay, setBlocksByDay] = useState(() => {
+    try {
+      const stored = localStorage.getItem('limina-blocks')
+      return stored ? JSON.parse(stored) : scheduleByDay
+    } catch { return scheduleByDay }
+  })
+
+  const [allBuckets, setAllBuckets] = useState(() => {
+    try {
+      const stored = localStorage.getItem('limina-buckets')
+      return stored ? JSON.parse(stored) : buckets
+    } catch { return buckets }
+  })
+
+  const [questions, setQuestions] = useState(() => {
+    try {
+      const stored = localStorage.getItem('limina-questions')
+      return stored ? JSON.parse(stored) : openQuestions
+    } catch { return openQuestions }
+  })
   const [openModal, setOpenModal] = useState(null)
   const [activeDay, setActiveDay] = useState(todayDay)
   const [energyMode, setEnergyMode] = useState('productive')
@@ -79,11 +96,22 @@ export default function App() {
     requestNotificationPermission()
   }, [])
 
-  // Persist alarms to localStorage whenever the alarms array changes.
-  // JSON.stringify converts our array to a string (localStorage only stores strings).
-  // JSON.parse (in the lazy init above) converts it back on next load.
+  // Persist everything to localStorage whenever it changes.
+  // JSON.stringify/parse is the bridge between JS objects and localStorage strings.
   useEffect(() => {
-    localStorage.setItem('limina-alarms', JSON.stringify(alarms))
+    localStorage.setItem('limina-blocks',    JSON.stringify(blocksByDay))
+  }, [blocksByDay])
+
+  useEffect(() => {
+    localStorage.setItem('limina-buckets',   JSON.stringify(allBuckets))
+  }, [allBuckets])
+
+  useEffect(() => {
+    localStorage.setItem('limina-questions', JSON.stringify(questions))
+  }, [questions])
+
+  useEffect(() => {
+    localStorage.setItem('limina-alarms',    JSON.stringify(alarms))
   }, [alarms])
 
   // Reschedule alarms from scratch whenever alarms or the active day changes.
