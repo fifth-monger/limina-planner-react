@@ -9,11 +9,13 @@ import TaskBlock from './components/blocks/TaskBlock'
 import FocusBlock from './components/blocks/FocusBlock'
 import BufferBlock from './components/blocks/BufferBlock'
 import AlarmTick from './components/blocks/AlarmTick'
+import NoteBlock from './components/blocks/NoteBlock'
 import Sidebar from './components/sidebar/Sidebar'
 import BucketsModal from './components/modals/BucketsModal'
 import OpenQuestionsModal from './components/modals/OpenQuestionsModal'
 import EnergyCheckInModal from './components/modals/EnergyCheckInModal'
 import AlarmsModal from './components/modals/AlarmsModal'
+import AddBlockModal from './components/modals/AddBlockModal'
 
 // Build the week once at load time — dates are correct for whatever week it is today.
 const weekDays = getWeekDays()
@@ -50,9 +52,7 @@ export default function App() {
   // Which bucket's detail panel is open in the sidebar (null = normal sidebar)
   const [activeBucketId, setActiveBucketId] = useState(null)
 
-  // 'type' → choosing task vs focus | 'focus-bucket' → picking a bucket
-  const [addingStep, setAddingStep] = useState(null)
-  const [selectedBucketId, setSelectedBucketId] = useState('')
+  const [showAddBlock, setShowAddBlock] = useState(false)
 
   // On mount: check if the user already checked in today.
   // localStorage stores plain strings — 'limina-checkin-date' is something like "Wed May 27 2026".
@@ -369,59 +369,20 @@ export default function App() {
     }))
   }
 
-  function handleAddTaskBlock() {
-    setBlocks(prev => [...prev, {
-      id: 'block-' + Date.now(),
-      type: 'task',
-      isLifeAnchor: true,
-      name: 'New Block',
-      time: '',
-      duration: '',
-      color: '#B09070',
-      subtasks: [],
-      energyLevel: 'medium',
-    }])
-    setAddingStep(null)
-  }
-
-  function handleAddOneOffBlock() {
-    setBlocks(prev => [...prev, {
-      id: 'block-' + Date.now(),
-      type: 'task',
-      isLifeAnchor: false,
-      isOneOff: true,
-      name: 'New Task',
-      time: '',
-      duration: '',
-      color: '#B09070',
-      subtasks: [],
-      energyLevel: 'medium',
-    }])
-    setAddingStep(null)
-  }
-
-  function handleAddFocusBlock() {
-    const bucket = allBuckets.find(b => b.id === selectedBucketId) || allBuckets[0]
-    if (!bucket) return
-    setBlocks(prev => [...prev, {
-      id: 'block-' + Date.now(),
-      type: 'focus',
-      isLifeAnchor: false,
-      name: bucket.name,
-      bucketId: bucket.id,
-      time: '',
-      duration: '',
-      color: bucket.color,
-      subtasks: [],
-      energyLevel: 'productive',
-    }])
-    setAddingStep(null)
-    setSelectedBucketId('')
-  }
-
-  function openFocusBucketStep() {
-    setSelectedBucketId(allBuckets[0]?.id || '')
-    setAddingStep('focus-bucket')
+  // Add one or more blocks from the AddBlockModal.
+  // Receives a days array and a blockData object (no ID — we assign IDs here).
+  // All days are updated in a single state transaction to avoid multiple re-renders.
+  function handleAddBlock(days, blockData) {
+    setBlocksByDay(prev => {
+      const updated = { ...prev }
+      days.forEach((day, i) => {
+        const newBlock = { ...blockData, id: `block-${Date.now()}-${i}` }
+        const existing = updated[day] ?? []
+        const merged = [...existing, newBlock]
+        updated[day] = merged.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time))
+      })
+      return updated
+    })
   }
 
   return (
@@ -449,9 +410,11 @@ export default function App() {
 
             <div className="flex flex-col gap-3">
               {timelineItems.map(item => {
-                // Alarm tick marks — lightweight spine annotations
                 if (item._type === 'alarm') {
                   return <AlarmTick key={item.id} alarm={item} />
+                }
+                if (item.type === 'note') {
+                  return <NoteBlock key={item.id} block={item} onDeleteBlock={handleDeleteBlock} />
                 }
                 if (item.type === 'buffer') {
                   return <BufferBlock key={item.id} block={item} />
@@ -490,96 +453,13 @@ export default function App() {
                 )
               })}
 
-              {/* ── Add block chooser ── */}
-              {addingStep === null && (
-                <button
-                  onClick={() => setAddingStep('type')}
-                  className="w-full border border-dashed border-lborder rounded-xl py-3 font-mono text-[10px] uppercase tracking-widest text-muted hover:border-cerulean hover:text-cerulean transition-colors"
-                >
-                  + new block
-                </button>
-              )}
-
-              {addingStep === 'type' && (
-                <div className="rounded-xl border border-lborder bg-surface p-4">
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted mb-3">
-                    what kind of block?
-                  </p>
-                  <div className="flex gap-2 mb-3">
-                    {/* Task block option */}
-                    <button
-                      onClick={handleAddTaskBlock}
-                      className="flex-1 flex flex-col gap-1 items-start p-3 rounded-lg border border-lborder bg-lifebg hover:border-warm transition-colors text-left"
-                    >
-                      <span className="font-mono text-[9px] uppercase tracking-widest text-warm">⚓ anchor</span>
-                      <span className="font-serif text-sm text-charcoal">Daily habit</span>
-                      <span className="font-mono text-[9px] text-muted">circles · resets daily</span>
-                    </button>
-                    {/* Focus block option */}
-                    <button
-                      onClick={openFocusBucketStep}
-                      className="flex-1 flex flex-col gap-1 items-start p-3 rounded-lg border border-lborder bg-surface hover:border-cerulean transition-colors text-left"
-                    >
-                      <span className="font-mono text-[9px] uppercase tracking-widest text-cerulean">focus block</span>
-                      <span className="font-serif text-sm text-charcoal">Project work</span>
-                      <span className="font-mono text-[9px] text-muted">checkboxes · rolls forward</span>
-                    </button>
-                    {/* One-off task option */}
-                    <button
-                      onClick={handleAddOneOffBlock}
-                      className="flex-1 flex flex-col gap-1 items-start p-3 rounded-lg border border-lborder bg-surface hover:border-moss transition-colors text-left"
-                    >
-                      <span className="font-mono text-[9px] uppercase tracking-widest text-moss">📌 one-off</span>
-                      <span className="font-serif text-sm text-charcoal">Single task</span>
-                      <span className="font-mono text-[9px] text-muted">circles · today only</span>
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => setAddingStep(null)}
-                    className="font-mono text-[9px] uppercase tracking-widest text-muted hover:text-charcoal transition-colors"
-                  >
-                    cancel
-                  </button>
-                </div>
-              )}
-
-              {addingStep === 'focus-bucket' && (
-                <div className="rounded-xl border border-lborder bg-surface p-4">
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-muted mb-3">
-                    which bucket?
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {allBuckets.map(b => (
-                      <button
-                        key={b.id}
-                        onClick={() => setSelectedBucketId(b.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-sans text-sm transition-colors
-                          ${selectedBucketId === b.id
-                            ? 'border-current text-charcoal bg-white shadow-sm'
-                            : 'border-lborder text-muted hover:border-current hover:text-charcoal'}`}
-                        style={{ borderColor: selectedBucketId === b.id ? b.color : undefined }}
-                      >
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: b.color }} />
-                        {b.name}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setAddingStep('type')}
-                      className="font-mono text-[9px] uppercase tracking-widest text-muted hover:text-charcoal transition-colors"
-                    >
-                      ← back
-                    </button>
-                    <button
-                      onClick={handleAddFocusBlock}
-                      className="flex-1 font-sans text-sm text-white bg-cerulean rounded-lg py-2 hover:bg-[#3A8FB4] transition-colors"
-                    >
-                      Create focus block
-                    </button>
-                  </div>
-                </div>
-              )}
+              {/* ── Add block ── */}
+              <button
+                onClick={() => setShowAddBlock(true)}
+                className="w-full border border-dashed border-lborder rounded-xl py-3 font-mono text-[10px] uppercase tracking-widest text-muted hover:border-cerulean hover:text-cerulean transition-colors"
+              >
+                + new block
+              </button>
             </div>
           </div>
         </main>
@@ -623,6 +503,13 @@ export default function App() {
         onAdd={handleAddAlarm}
         onUpdate={handleUpdateAlarm}
         onDelete={handleDeleteAlarm}
+      />
+      <AddBlockModal
+        isOpen={showAddBlock}
+        onClose={() => setShowAddBlock(false)}
+        onAdd={handleAddBlock}
+        buckets={allBuckets}
+        defaultDay={activeDay}
       />
     </div>
   )
