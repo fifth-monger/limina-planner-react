@@ -25,10 +25,10 @@ export default function OpenQuestionsModal({ questions, isOpen, onClose, onSave 
       onClick={onClose}
     >
       <div
-        className="bg-surface rounded-[14px] w-full max-w-sm mx-4 flex flex-col overflow-hidden shadow-xl"
+        className="bg-white rounded-[14px] w-full max-w-sm mx-4 flex flex-col overflow-hidden shadow-xl"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-lborder">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-borderCard">
           <h2 className="font-serif text-lg text-charcoal">Open Questions</h2>
           <button onClick={onClose} className="text-muted hover:text-charcoal text-xl leading-none">✕</button>
         </div>
@@ -37,7 +37,7 @@ export default function OpenQuestionsModal({ questions, isOpen, onClose, onSave 
           {draft.map(q => (
             <input
               key={q.id}
-              className="w-full font-sans text-sm text-charcoal bg-parchment border border-lborder rounded-lg px-3 py-1.5 outline-none focus:border-cerulean"
+              className="w-full font-sans text-sm text-charcoal bg-parchment border border-borrderCard rounded-lg px-3 py-1.5 outline-none focus:border-cerulean"
               value={q.text}
               onChange={e => handleChange(q.id, e.target.value)}
               placeholder="what's on your mind?"
@@ -45,14 +45,14 @@ export default function OpenQuestionsModal({ questions, isOpen, onClose, onSave 
           ))}
           <button
             onClick={handleAdd}
-            className="w-full font-mono text-xs uppercase tracking-widest text-muted border border-dashed border-lborder rounded-lg py-2 hover:border-cerulean hover:text-cerulean transition-colors mt-1"
+            className="w-full font-mono text-xs uppercase tracking-widest text-muted border border-dashed border-borderCard rounded-lg py-2 hover:border-cerulean hover:text-cerulean transition-colors mt-1"
           >
             + add a question
           </button>
         </div>
 
-        <div className="flex gap-2 px-5 py-4 border-t border-lborder">
-          <button onClick={onClose} className="flex-1 font-sans text-sm text-muted border border-lborder rounded-lg py-2 hover:border-charcoal transition-colors">
+        <div className="flex gap-2 px-5 py-4 border-t border-borderCard">
+          <button onClick={onClose} className="flex-1 font-sans text-sm text-muted border border-borderCard rounded-lg py-2 hover:border-charcoal transition-colors">
             Cancel
           </button>
           <button onClick={handleSave} className="flex-1 font-sans text-sm text-white bg-cerulean rounded-lg py-2 hover:bg-[#3A8FB4] transition-colors">

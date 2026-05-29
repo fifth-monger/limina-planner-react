@@ -34,9 +34,9 @@ export default function TopBar({ energyMode, onModeChange }) {
   const current = MODES.find(m => m.id === energyMode) ?? MODES[0]
 
   return (
-    <header className="bg-surface border-b border-lborder px-6 py-4 flex items-center justify-between">
+    <header className=" bg-parchment border-b-2 border-borderCard border-lborder px-6 py-4 flex items-center justify-between">
       <div>
-        <h1 className="font-serif text-2xl text-charcoal leading-tight">limina planner</h1>
+        <h1 className="font-serif text-3xl text-charcoal leading-tight">limina planner</h1>
         <p className="font-mono text-xs text-muted tracking-widest uppercase mt-0.5">
           your threshold, your rhythm
         </p>
@@ -69,7 +69,7 @@ export default function TopBar({ energyMode, onModeChange }) {
                   key={mode.id}
                   onClick={() => { onModeChange(mode.id); setShowPopover(false) }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors
-                    ${mode.id === energyMode ? 'bg-parchment' : 'hover:bg-parchment'}`}
+                    ${mode.id === energyMode ? 'bg-parchment' : 'hover:bg-cerulean-light'}`}
                 >
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"

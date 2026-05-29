@@ -41,7 +41,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
 
   return (
     <div
-      className="group rounded-xl border border-borderCard bg-cardTask p-0 flex overflow-hidden"
+      className="group rounded-xl border border-borderAccent bg-cardTask p-0 flex overflow-hidden"
       style={{ borderLeftWidth: '4px', borderLeftColor: block.color }}
     >
       <div className="flex-1 p-4 min-w-0">
@@ -53,10 +53,10 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
                 value={block.time}
                 onChange={time => onUpdateBlock(block.id, { time })}
               />
-              <span className="font-mono text-[10px] text-muted">·</span>
+              <span className="font-mono text-[12px] text-textMeta">·</span>
               {editingField === 'duration' ? (
                 <input
-                  className="font-mono text-[10px] text-muted bg-transparent border-b border-cerulean outline-none w-24"
+                  className="font-mono text-[12px] text-textMeta bg-transparent border-b border-cerulean outline-none w-24"
                   value={fieldValue}
                   onChange={e => setFieldValue(e.target.value)}
                   onBlur={commitEdit}
@@ -66,14 +66,14 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
               ) : (
                 <>
                   <button
-                    className="font-mono text-[10px] text-muted hover:text-cerulean transition-colors"
+                    className="font-mono text-[12px] text-textMeta hover:text-cerulean transition-colors"
                     onClick={() => startEdit('duration')}
                   >
                     {getBlockDuration(block) || 'set duration'}
                   </button>
                   {/* Show amber "shortened" tag when medium mode shrinks the duration */}
                   {getBlockDuration(block) !== block.duration && block.duration && (
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-[#C8922A] bg-[#C8922A]/10 px-1.5 py-0.5 rounded">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-[#C8922A] bg-[#C8922A]/10 px-1.5 py-0.5 rounded">
                       shortened
                     </span>
                   )}
@@ -93,7 +93,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
               />
             ) : (
               <h3
-                className="font-serif text-lg text-charcoal leading-tight cursor-text hover:text-cerulean transition-colors"
+                className="font-serif text-xl text-textPrimary leading-tight cursor-text hover:text-cerulean transition-colors"
                 onClick={() => startEdit('name')}
               >
                 {block.name || 'Untitled'}
@@ -101,12 +101,12 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
             )}
 
             {isAnchor && (
-              <span className="inline-block font-mono text-[9px] uppercase tracking-widest text-warm bg-warm-light px-2 py-0.5 rounded mt-1">
+              <span className="inline-block font-mono text-[10px] uppercase tracking-widest text-textMeta px-2 py-0.5 rounded mt-1">
                 ⚓ task · daily
               </span>
             )}
             {block.note && (
-              <p className="font-sans text-xs text-muted mt-1 leading-snug">{block.note}</p>
+              <p className="font-sans text-xs text-textMeta mt-1 leading-snug">{block.note}</p>
             )}
           </div>
 
@@ -123,7 +123,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
             <button
               onClick={() => onToggleBlock(block.id)}
               className={`w-5 h-5 rounded-full border-2 transition-colors
-                ${allDone ? 'border-moss bg-moss' : 'border-lborder hover:border-moss'}`}
+                ${allDone ? 'border-cerulean bg-cerulean' : 'border-borderAccent hover:border-cerulean'}`}
               title="Mark all done"
             />
           </div>
@@ -156,7 +156,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
         ) : (
           <button
             onClick={() => setAddingTask(true)}
-            className="mt-2.5 font-mono text-[9px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
+            className="mt-2.5 font-mono text-[10px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
           >
             + add task
           </button>
@@ -184,10 +184,9 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
 
         {block.tip && (
           <div
-            className="mt-3 rounded-lg px-3 py-2"
-            style={{ backgroundColor: block.color + '15' }}
+            className="bg-cerulean-light/40 mt-3 rounded-lg px-3 py-2"
           >
-            <p className="font-mono text-[9px] text-charcoal leading-snug">
+            <p className="font-mono text-[9px] text-cerulean/80 leading-snug">
               <span className="mr-1">🧠</span>{block.tip}
             </p>
           </div>

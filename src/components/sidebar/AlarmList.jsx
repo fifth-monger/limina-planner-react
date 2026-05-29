@@ -4,7 +4,7 @@ export default function AlarmList({ alarms, onOpenModal, onToggleAlarm }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted">Alarms</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-textMeta">Alarms</span>
         <button
           onClick={() => onOpenModal('alarms')}
           className="text-muted hover:text-charcoal transition-colors"
@@ -24,7 +24,7 @@ export default function AlarmList({ alarms, onOpenModal, onToggleAlarm }) {
           <div key={alarm.id} className="flex items-start gap-2">
             <span className="text-[11px] mt-0.5 flex-shrink-0">🔔</span>
             <div className="flex-1 min-w-0">
-              <span className="font-mono text-[10px] text-muted mr-1.5 whitespace-nowrap">
+              <span className="font-mono text-[10px] text-muted mr-1.5 whitespace-nowrap text-cerulean/70">
                 {formatTimeDisplay(alarm.time)}
               </span>
               <span className={`font-sans text-sm ${alarm.active ? 'text-charcoal' : 'text-muted line-through'}`}>
@@ -38,7 +38,7 @@ export default function AlarmList({ alarms, onOpenModal, onToggleAlarm }) {
               className={`w-3 h-3 rounded-full border-2 flex-shrink-0 mt-1 transition-colors
                 ${alarm.active
                   ? 'bg-cerulean border-cerulean'
-                  : 'bg-transparent border-lborder hover:border-cerulean'}`}
+                  : 'bg-transparent border-borderAccent hover:border-cerulean'}`}
             />
           </div>
         ))}

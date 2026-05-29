@@ -42,7 +42,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
 
   return (
     <div
-      className="group rounded-xl border border-borderCard bg-surface p-0 flex overflow-hidden"
+      className="group rounded-xl border border-borderAccent bg-surface p-0 flex overflow-hidden"
       style={{ borderLeftWidth: '4px', borderLeftColor: block.color }}
     >
       <div className="flex-1 p-4 min-w-0">
@@ -67,14 +67,14 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
               ) : (
                 <>
                   <button
-                    className="font-mono text-[10px] text-muted hover:text-cerulean transition-colors"
+                    className="font-mono text-[12px] text-textMeta hover:text-cerulean transition-colors"
                     onClick={() => startEdit('duration')}
                   >
                     {getBlockDuration(block) || 'set duration'}
                   </button>
                   {/* Show amber "shortened" tag when medium mode shrinks the duration */}
                   {getBlockDuration(block) !== block.duration && block.duration && (
-                    <span className="font-mono text-[9px] uppercase tracking-widest text-[#C8922A] bg-[#C8922A]/10 px-1.5 py-0.5 rounded">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-[#C8922A] bg-[#C8922A]/10 px-1.5 py-0.5 rounded">
                       shortened
                     </span>
                   )}
@@ -94,7 +94,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
               />
             ) : (
               <h3
-                className="font-serif text-lg text-charcoal leading-tight cursor-text hover:text-cerulean transition-colors"
+                className="font-serif text-xl text-textPrimary leading-tight cursor-text hover:text-cerulean transition-colors"
                 onClick={() => startEdit('name')}
               >
                 {block.name || 'Untitled'}
@@ -102,13 +102,11 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
             )}
 
             <span
-              className="inline-block font-mono text-[9px] uppercase tracking-widest px-2 py-0.5 rounded mt-1"
-              style={{ backgroundColor: block.color + '20', color: block.color }}
-            >
+              className="inline-block font-mono text-[10px] text-textMeta uppercase tracking-widest px-2 py-0.5 rounded mt-1"            >
               focus
             </span>
             {block.note && (
-              <p className="font-sans text-xs text-muted mt-1 leading-snug">{block.note}</p>
+              <p className="font-sans text-xs text-charcoal mt-1 leading-snug">{block.note}</p>
             )}
           </div>
 
@@ -125,7 +123,7 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
             <button
               onClick={() => onToggleBlock(block.id)}
               className={`w-5 h-5 rounded-full border-2 transition-colors
-                ${allDone ? 'border-moss bg-moss' : 'border-lborder hover:border-moss'}`}
+                ${allDone ? 'border-cerulean bg-cerulean' : 'border-borderAccent hover:border-cerulean'}`}
               title="Mark all done"
             />
           </div>
@@ -220,10 +218,10 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
                 className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border border-dashed border-lborder"
               >
                 <span className="text-[10px] flex-shrink-0">🔔</span>
-                <span className="font-mono text-[9px] text-muted flex-shrink-0">
+                <span className="font-mono text-[10px] text-muted flex-shrink-0">
                   {formatTimeDisplay(alarm.time)}
                 </span>
-                <span className="font-mono text-[9px] text-charcoal italic truncate">
+                <span className="font-mono text-[10px] text-charcoal italic truncate">
                   {alarm.label}
                 </span>
               </div>
@@ -233,10 +231,10 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
 
         {block.tip && (
           <div
-            className="mt-3 rounded-lg px-3 py-2"
-            style={{ backgroundColor: block.color + '15' }}
+            className="mt-3 rounded-lg px-3 py-2 bg-cerulean-light/40"
+            
           >
-            <p className="font-mono text-[9px] text-charcoal leading-snug">
+            <p className="font-mono text-[10px] text-cerulean/80 leading-snug">
               <span className="mr-1">🧠</span>{block.tip}
             </p>
           </div>

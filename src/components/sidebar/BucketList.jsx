@@ -2,7 +2,7 @@ export default function BucketList({ buckets, bucketCounts = {}, onOpenModal, on
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted">Buckets</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-textMeta">Buckets</span>
         <button
           onClick={() => onOpenModal('buckets')}
           className="text-muted hover:text-charcoal transition-colors"
@@ -21,7 +21,7 @@ export default function BucketList({ buckets, bucketCounts = {}, onOpenModal, on
             <button
               key={b.id}
               onClick={() => onSelectBucket(b.id)}
-              className="group flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-parchment transition-colors text-left w-full"
+              className="group flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/70 transition-colors text-left w-full"
             >
               <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: b.color }} />
               <span className="font-sans text-sm text-charcoal flex-1">{b.name}</span>

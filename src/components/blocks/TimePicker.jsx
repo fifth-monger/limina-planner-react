@@ -121,7 +121,7 @@ export default function TimePicker({ value, onChange }) {
     <>
       <button
         ref={buttonRef}
-        className="font-mono text-[10px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
+        className="font-mono text-[12px] uppercase tracking-widest text-textMeta hover:text-cerulean transition-colors"
         onClick={handleOpen}
       >
         {formatTimeDisplay(value)}

@@ -79,9 +79,9 @@ export default function AlarmsModal({ alarms, isOpen, onClose, onAdd, onUpdate, 
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-lborder flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-borderCard flex-shrink-0">
           <h2 className="font-serif text-xl text-charcoal">Alarms</h2>
           <button onClick={onClose} className="text-muted hover:text-charcoal transition-colors text-xl leading-none">×</button>
         </div>
@@ -267,7 +267,7 @@ function EditForm({ draft, setDraft, onToggleDay, onCancel, onSave }) {
       <div className="flex items-center gap-3 pt-1">
         <button
           onClick={onCancel}
-          className="font-mono text-[9px] uppercase tracking-widest text-muted hover:text-charcoal transition-colors"
+          className="font-mono text-[9px] uppercase tracking-widest text-muted hover:text-charcoal transition-colors border border-borderCard"
         >
           cancel
         </button>

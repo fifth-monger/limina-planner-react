@@ -21,10 +21,12 @@ export default function WeekStrip({ days, activeDay, onDayChange }) {
             key={d.day}
             onClick={() => onDayChange(d.day)}
             className={`flex-1 min-w-[72px] flex flex-col items-center gap-1 px-2 py-2 rounded-lg border text-center transition-colors
-              ${isActive ? 'bg-cerulean-light border-cerulean' : 'border-transparent hover:bg-surface hover:border-lborder'}`}
+              ${isActive ? 'bg-cerulean border-cerulean shawdow-sm' : 'border-transparent hover:bg-surface hover:border-lborder'}`}
           >
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted">{d.day}</span>
-            <span className={`font-serif text-lg leading-none ${isActive ? 'text-cerulean' : 'text-charcoal'}`}>
+            <span className={`font-mono text-[10px] uppercase tracking-widest ${isActive ? 'text-white' : 'text-charcoal'}`}>
+              {d.day}
+              </span>
+            <span className={`font-serif text-lg leading-none ${isActive ? 'text-white' : 'text-charcoal'}`}>
               {d.date}
             </span>
             {isToday && !isActive && (

@@ -8,7 +8,7 @@ export default function SubTask({ subtask, shape, onToggle }) {
     >
       {isBox ? (
         <span className={`w-4 h-4 flex-shrink-0 rounded-sm border flex items-center justify-center transition-colors
-          ${subtask.done ? 'bg-moss border-moss' : 'border-lborder group-hover:border-moss'}`}
+          ${subtask.done ? 'bg-cerulean border-cerulean' : 'border-lborder group-hover:border-cerulean'}`}
         >
           {subtask.done && (
             <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 10 10" fill="none">
@@ -18,7 +18,7 @@ export default function SubTask({ subtask, shape, onToggle }) {
         </span>
       ) : (
         <span className={`w-4 h-4 flex-shrink-0 rounded-full border-2 transition-colors
-          ${subtask.done ? 'bg-moss border-moss' : 'border-lborder group-hover:border-moss'}`}
+          ${subtask.done ? 'bg-cerulean border-cerulean' : 'border-borderAccent group-hover:border-cerulean'}`}
         />
       )}
       <span className={`font-sans text-sm transition-colors

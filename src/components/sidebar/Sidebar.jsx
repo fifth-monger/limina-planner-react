@@ -40,7 +40,7 @@ export default function Sidebar({
 
   // Normal sidebar: bucket list + divider + open questions
   return (
-    <aside className="w-64 flex-shrink-0 bg-parchment border-l border-lborder p-5 flex flex-col gap-8 overflow-y-auto">
+    <aside className="w-64 flex-shrink-0 bg-sidepanel border-l border-borderCard p-5 flex flex-col gap-8 overflow-y-auto">
       <BucketList
         buckets={buckets}
         bucketCounts={bucketCounts}
