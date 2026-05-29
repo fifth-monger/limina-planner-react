@@ -41,13 +41,11 @@ export default function FocusBlock({ block, getBlockDuration, bucketBacklog = []
   }
 
   return (
-    <div className="group rounded-xl border border-lborder bg-surface p-4 flex gap-3">
-      <div className="flex flex-col items-center pt-1">
-        <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: block.color }} />
-        <div className="w-px flex-1 mt-1" style={{ backgroundColor: block.color + '40' }} />
-      </div>
-
-      <div className="flex-1 min-w-0">
+    <div
+      className="group rounded-xl border border-borderCard bg-surface p-0 flex overflow-hidden"
+      style={{ borderLeftWidth: '4px', borderLeftColor: block.color }}
+    >
+      <div className="flex-1 p-4 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex-1 min-w-0">
             {/* Time picker + duration */}

@@ -34,6 +34,12 @@ export default {
         muted: '#7A7870',
         lborder: '#D8D4CC',
         lifebg: '#EDEAE2',
+        sidepanel: '#E8E3D8',
+        cardTask: '#FDFAF6',
+        borderCard: '#D0CBC0',
+        borderAccent: '#C0BAB0',
+        textPrimary: '#1E1E1C',
+        textMeta: '#8A8680',
       },
       fontFamily: {
         serif: ['"DM Serif Display"', 'serif'],
