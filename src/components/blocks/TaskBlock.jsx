@@ -10,6 +10,7 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
   const [fieldValue, setFieldValue] = useState('')
   const [addingTask, setAddingTask] = useState(false)
   const [newTaskText, setNewTaskText] = useState('')
+  const [expanded, setExpanded] = useState(true)
 
   function startEdit(field) {
     setEditingField(field)
@@ -81,28 +82,43 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
               )}
             </div>
 
-            {/* Block name */}
-            {editingField === 'name' ? (
-              <input
-                className="font-serif text-lg text-charcoal bg-transparent border-b border-cerulean outline-none w-full leading-tight"
-                value={fieldValue}
-                onChange={e => setFieldValue(e.target.value)}
-                onBlur={commitEdit}
-                onKeyDown={handleKeyDown}
-                autoFocus
-              />
-            ) : (
-              <h3
-                className="font-serif text-xl text-textPrimary leading-tight cursor-text hover:text-cerulean transition-colors"
-                onClick={() => startEdit('name')}
-              >
-                {block.name || 'Untitled'}
-              </h3>
-            )}
+            {/* Block name + collapse toggle */}
+            <div className="flex items-baseline gap-2">
+              {editingField === 'name' ? (
+                <input
+                  className="font-serif text-lg text-charcoal bg-transparent border-b border-cerulean outline-none w-full leading-tight"
+                  value={fieldValue}
+                  onChange={e => setFieldValue(e.target.value)}
+                  onBlur={commitEdit}
+                  onKeyDown={handleKeyDown}
+                  autoFocus
+                />
+              ) : (
+                <h3
+                  className="font-serif text-xl text-textPrimary leading-tight cursor-text hover:text-cerulean transition-colors"
+                  onClick={() => startEdit('name')}
+                >
+                  {block.name || 'Untitled'}
+                </h3>
+              )}
+              {block.subtasks.length > 0 && (
+                <button
+                  onClick={() => setExpanded(v => !v)}
+                  className="font-mono text-[9px] text-muted hover:text-charcoal transition-colors flex-shrink-0"
+                >
+                  {expanded ? '▴ tasks' : `▾ tasks (${block.subtasks.length})`}
+                </button>
+              )}
+            </div>
 
             {isAnchor && (
-              <span className="inline-block font-mono text-[10px] uppercase tracking-widest text-textMeta px-2 py-0.5 rounded mt-1">
+              <span className="inline-block font-mono text-[9px] uppercase tracking-widest text-textMeta mt-1">
                 ⚓ anchor
+              </span>
+            )}
+            {block.isOneOff && (
+              <span className="inline-block font-mono text-[9px] uppercase tracking-widest text-textMeta mt-1">
+                📌 one-off
               </span>
             )}
             {block.note && (
@@ -129,37 +145,41 @@ export default function TaskBlock({ block, getBlockDuration, inBlockAlarms = [],
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          {block.subtasks.map(st => (
-            <SubTask
-              key={st.id}
-              subtask={st}
-              shape="circle"
-              onToggle={(stId) => onToggleSubtask(block.id, stId)}
-            />
-          ))}
-        </div>
+        {expanded && (
+          <>
+            <div className="flex flex-col gap-2 mt-3">
+              {block.subtasks.map(st => (
+                <SubTask
+                  key={st.id}
+                  subtask={st}
+                  shape="circle"
+                  onToggle={(stId) => onToggleSubtask(block.id, stId)}
+                />
+              ))}
+            </div>
 
-        {addingTask ? (
-          <div className="flex items-center gap-2.5 mt-2">
-            <span className="w-4 h-4 rounded-full border-2 border-lborder flex-shrink-0" />
-            <input
-              className="flex-1 font-sans text-sm text-charcoal bg-transparent border-b border-cerulean outline-none pb-0.5"
-              placeholder="new task…"
-              value={newTaskText}
-              onChange={e => setNewTaskText(e.target.value)}
-              onBlur={handleAddTask}
-              onKeyDown={handleAddKeyDown}
-              autoFocus
-            />
-          </div>
-        ) : (
-          <button
-            onClick={() => setAddingTask(true)}
-            className="mt-2.5 font-mono text-[10px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
-          >
-            + add task
-          </button>
+            {addingTask ? (
+              <div className="flex items-center gap-2.5 mt-2">
+                <span className="w-4 h-4 rounded-full border-2 border-lborder flex-shrink-0" />
+                <input
+                  className="flex-1 font-sans text-sm text-charcoal bg-transparent border-b border-cerulean outline-none pb-0.5"
+                  placeholder="new task…"
+                  value={newTaskText}
+                  onChange={e => setNewTaskText(e.target.value)}
+                  onBlur={handleAddTask}
+                  onKeyDown={handleAddKeyDown}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <button
+                onClick={() => setAddingTask(true)}
+                className="mt-2.5 font-mono text-[10px] uppercase tracking-widest text-muted hover:text-cerulean transition-colors"
+              >
+                + add task
+              </button>
+            )}
+          </>
         )}
 
         {/* In-block alarms — shown when an alarm fires during this block's window */}

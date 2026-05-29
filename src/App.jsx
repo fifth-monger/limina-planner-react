@@ -384,6 +384,22 @@ export default function App() {
     setAddingStep(null)
   }
 
+  function handleAddOneOffBlock() {
+    setBlocks(prev => [...prev, {
+      id: 'block-' + Date.now(),
+      type: 'task',
+      isLifeAnchor: false,
+      isOneOff: true,
+      name: 'New Task',
+      time: '',
+      duration: '',
+      color: '#B09070',
+      subtasks: [],
+      energyLevel: 'medium',
+    }])
+    setAddingStep(null)
+  }
+
   function handleAddFocusBlock() {
     const bucket = allBuckets.find(b => b.id === selectedBucketId) || allBuckets[0]
     if (!bucket) return
@@ -495,7 +511,7 @@ export default function App() {
                       onClick={handleAddTaskBlock}
                       className="flex-1 flex flex-col gap-1 items-start p-3 rounded-lg border border-lborder bg-lifebg hover:border-warm transition-colors text-left"
                     >
-                      <span className="font-mono text-[9px] uppercase tracking-widest text-warm">⚓ task block</span>
+                      <span className="font-mono text-[9px] uppercase tracking-widest text-warm">⚓ anchor</span>
                       <span className="font-serif text-sm text-charcoal">Daily habit</span>
                       <span className="font-mono text-[9px] text-muted">circles · resets daily</span>
                     </button>
@@ -507,6 +523,15 @@ export default function App() {
                       <span className="font-mono text-[9px] uppercase tracking-widest text-cerulean">focus block</span>
                       <span className="font-serif text-sm text-charcoal">Project work</span>
                       <span className="font-mono text-[9px] text-muted">checkboxes · rolls forward</span>
+                    </button>
+                    {/* One-off task option */}
+                    <button
+                      onClick={handleAddOneOffBlock}
+                      className="flex-1 flex flex-col gap-1 items-start p-3 rounded-lg border border-lborder bg-surface hover:border-moss transition-colors text-left"
+                    >
+                      <span className="font-mono text-[9px] uppercase tracking-widest text-moss">📌 one-off</span>
+                      <span className="font-serif text-sm text-charcoal">Single task</span>
+                      <span className="font-mono text-[9px] text-muted">circles · today only</span>
                     </button>
                   </div>
                   <button
